@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "886172032818",
+    "firebase_url": "https://laxmi-tvs-workshop-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "laxmi-tvs-workshop",
+    "storage_bucket": "laxmi-tvs-workshop.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886172032818:android:f8d8a721342aceaca0412b",
+        "android_client_info": {
+          "package_name": "com.example.laxmi_tvs_workshop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "886172032818-sb54uhar2obecalbnmjh0g2gaiao4rss.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtCd-YJ59RsFkA2IGVHIA6UNttxDSqzJ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "886172032818-sb54uhar2obecalbnmjh0g2gaiao4rss.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

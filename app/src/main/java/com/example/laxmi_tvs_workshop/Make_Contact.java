@@ -6,14 +6,27 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.rpc.context.AttributeContext;
+
+import org.w3c.dom.Text;
+
+import java.util.Objects;
 
 public class Make_Contact extends AppCompatActivity {
 ImageButton go_back_home;
@@ -21,6 +34,9 @@ androidx.recyclerview.widget.RecyclerView customer_list;
 DatabaseReference databaseReference;
 RecyclerView.LayoutManager mLayoutManager;
 Adapter_For_Make_Contact adapter_for_make_contact;
+public static TextView counter_text_box;
+Dialog  successDialog;
+public static boolean sending_message = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,8 +46,10 @@ Adapter_For_Make_Contact adapter_for_make_contact;
         go_back_home = (ImageButton) findViewById(R.id.go_back_home);
         customer_list = (androidx.recyclerview.widget.RecyclerView) findViewById(R.id.customer_list);
         mLayoutManager = new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
-
-
+        successDialog = new Dialog(this);
+        successDialog.setContentView(R.layout.alert_update_sms_list);
+        successDialog.setCancelable(true);
+        counter_text_box = (TextView)findViewById(R.id.counter_text_box);
 
 
         go_back_home.setOnClickListener(new View.OnClickListener() {
@@ -48,7 +66,14 @@ Adapter_For_Make_Contact adapter_for_make_contact;
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this,R.drawable.divider));
         customer_list.addItemDecoration(dividerItemDecoration);
 
-
+        successDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                String key = snapshot.getKey();
+                remove_after_message_sent(key);
+            }
+        });
 
 
     }
@@ -56,16 +81,47 @@ Adapter_For_Make_Contact adapter_for_make_contact;
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        adapter_for_make_contact = new Adapter_For_Make_Contact(this, databaseReference);
-        customer_list.setLayoutManager(mLayoutManager);
-        customer_list.setAdapter(adapter_for_make_contact);
+        if(!sending_message){
+            adapter_for_make_contact = new Adapter_For_Make_Contact(this, databaseReference);
+            customer_list.setLayoutManager(mLayoutManager);
+            customer_list.setAdapter(adapter_for_make_contact);
+        }else if (sending_message && Adapter_For_Make_Contact.hashMap.size()>0){
+            TextView tittle = (TextView) successDialog.findViewById(R.id.success_alert_tittle);
+            Objects.requireNonNull(successDialog.getWindow()).setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+            Button ok_button = (Button) successDialog.findViewById(R.id.add_to_sms_list);
+            ok_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                    String key = snapshot.getKey();
+                    Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
+                    databaseReference.child("SMSLIST").child(customer_class.getFrame_no()).setValue(customer_class);
+                    remove_after_message_sent(key);
+                    successDialog.dismiss();
+                }
+            });
+
+            successDialog.show();
+        }
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(adapter_for_make_contact!=null){
+        if(adapter_for_make_contact != null && !sending_message){
             adapter_for_make_contact.cleanup();
         }
+    }
+
+    public void remove_after_message_sent(String  key){
+        Log.d("remove", "remove_after_message_sent: " + key);
+        databaseReference.child("Calling").child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                Log.d("remove", "removed successfully ");
+            }
+        });
+
     }
 }

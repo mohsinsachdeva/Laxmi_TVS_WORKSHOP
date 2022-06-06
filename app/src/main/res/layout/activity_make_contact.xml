@@ -11,7 +11,9 @@
     <LinearLayout
         android:id="@+id/top_layout"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:weightSum="3"
+        android:background="@color/grey">
 
         <ImageButton
             android:id="@+id/go_back_home"
@@ -21,11 +23,22 @@
             android:background="@drawable/back_button_image" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="50dp"
             android:background="@color/grey"
             android:gravity="center"
             android:text="CUSTOMER LIST"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_weight="3"/>
+
+        <TextView
+            android:id="@+id/counter_text_box"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
+            android:background="@color/light"
+            android:gravity="center"
             android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold" />

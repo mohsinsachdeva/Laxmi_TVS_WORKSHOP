@@ -3,7 +3,15 @@
     <string name="loading">Loading..</string>
 
     <array name="message_type">
+        <item>No Selection</item>
         <item>English</item>
         <item>Punjabi</item>
+        <item>Hindi</item>
+    </array>
+
+    <array name="reminder_type">
+        <item>No Selection</item>
+        <item>Due</item>
+        <item>Over Due</item>
     </array>
 </resources>

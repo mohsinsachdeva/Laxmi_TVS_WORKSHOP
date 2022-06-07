@@ -16,7 +16,7 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name=".Make_Contact"
+            android:name=".Home_page"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"/>
+            android:name=".Make_Contact"/>
+        <activity android:name=".MainActivity" />
     </application>
 
 </manifest>

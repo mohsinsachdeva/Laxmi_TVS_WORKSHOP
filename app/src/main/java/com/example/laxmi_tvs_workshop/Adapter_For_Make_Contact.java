@@ -51,7 +51,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         counter_check ();
 
         Log.d("testing", "Adapter_For_Make_Contact: CALLED");
-        databaseReference.child("Calling").addChildEventListener(childEventListener);
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addChildEventListener(childEventListener);
 
     }
 
@@ -312,7 +312,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     };
 
     public void cleanup() {
-        databaseReference.child("Calling").removeEventListener(childEventListener);
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).removeEventListener(childEventListener);
         hashMap.clear();
     }
 

@@ -64,7 +64,7 @@ public static boolean sending_message = false;
             }
         });
 
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,DividerItemDecoration.HORIZONTAL);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,DividerItemDecoration.VERTICAL);
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this,R.drawable.divider));
         customer_list.addItemDecoration(dividerItemDecoration);
 
@@ -118,7 +118,7 @@ public static boolean sending_message = false;
 
     public void remove_after_message_sent(String  key){
         Log.d("remove", "remove_after_message_sent: " + key);
-        databaseReference.child("Calling").child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
                 Log.d("remove", "removed successfully ");
@@ -136,5 +136,15 @@ public static boolean sending_message = false;
         if(data!=null){
             Log.d("activityresult", "onActivityResult: "+ data.getData().toString());
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        BASIC_DATA_HOLDER.setCalling_type("");
+        Intent intent = new Intent(Make_Contact.this, Home_page.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }

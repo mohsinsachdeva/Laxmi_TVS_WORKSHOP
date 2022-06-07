@@ -1,5 +1,6 @@
 package com.example.laxmi_tvs_workshop;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -36,6 +37,7 @@ RecyclerView.LayoutManager mLayoutManager;
 Adapter_For_Make_Contact adapter_for_make_contact;
 public static TextView counter_text_box;
 Dialog  successDialog;
+public static final int REQUEST_CODE = 123;
 public static boolean sending_message = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,5 +125,16 @@ public static boolean sending_message = false;
             }
         });
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("activityresult", "onActivityResult: request code "+ requestCode);
+        Log.d("activityresult", "onActivityResult: request code "+ resultCode);
+
+        if(data!=null){
+            Log.d("activityresult", "onActivityResult: "+ data.getData().toString());
+        }
     }
 }

@@ -144,8 +144,10 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         LOG_CLASS log_class = new LOG_CLASS("",frame_no,message,contact_date,contact_type,contacted_number);
                         databaseReference.child("LOGS").child(frame_no).push().setValue(log_class);
 
-                        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)));
-                       String key = snapshot.getKey();
+                        activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)),Make_Contact.REQUEST_CODE);
+
+
+                        String key = snapshot.getKey();
 
 
                         update_counter();
@@ -196,7 +198,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         LOG_CLASS log_class = new LOG_CLASS("",frame_no,message,contact_date,contact_type,contacted_number);
                         databaseReference.child("LOGS").child(frame_no).push().setValue(log_class);
 
-                        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)));
+                        activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)),Make_Contact.REQUEST_CODE);
                         String key = snapshot.getKey();
 
 

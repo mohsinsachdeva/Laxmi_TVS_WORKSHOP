@@ -11,6 +11,7 @@ public class Home_page extends AppCompatActivity {
     
     Button free_Calling;
     Button paid_Calling;
+    Button testing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,9 +19,11 @@ public class Home_page extends AppCompatActivity {
         setContentView(R.layout.activity_home_page);
 
         BASIC_DATA_HOLDER basic_data_holder = new BASIC_DATA_HOLDER();
+        BASIC_DATA_HOLDER.setActivity(this);
 
         free_Calling = (Button) findViewById(R.id.free_Calling);
         paid_Calling = (Button) findViewById(R.id.paid_Calling);
+        testing = (Button)findViewById(R.id.testing);
         free_Calling.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,5 +45,17 @@ public class Home_page extends AppCompatActivity {
             }
         });
 
+        testing.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BASIC_DATA_HOLDER.setCalling_type("testing");
+                Intent intent = new Intent(Home_page.this, Make_Contact.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
+
     }
+
 }

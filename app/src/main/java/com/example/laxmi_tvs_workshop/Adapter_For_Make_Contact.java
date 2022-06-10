@@ -41,6 +41,10 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     Calendar calendar;
     String last_message_date = "";
     String frame_no;
+    Customer_Class customer_class_gloabl;
+    boolean global_mobile1_selection;
+    boolean global_mobile2_selection;
+    long todays_date;
 
     public Adapter_For_Make_Contact(Activity activity, DatabaseReference databaseReference) {
         this.activity = activity;
@@ -48,7 +52,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         hashMap = new HashMap<>();
         calendar = Calendar.getInstance();
         key_holder = new ArrayList<>();
-        counter_check ();
+        counter_check();
+        BASIC_DATA_HOLDER.progress_bar();
 
         Log.d("testing", "Adapter_For_Make_Contact: CALLED");
         databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addChildEventListener(childEventListener);
@@ -66,7 +71,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     @Override
     public void onBindViewHolder(@NonNull Adapter_For_Make_Contact.Holder holder, int position) {
         DataSnapshot snapshot = hashMap.get(key_holder.get(position));
-        Log.d("view_error", "onBindViewHolder: "+ position);
+        Log.d("view_error", "onBindViewHolder: " + position);
         assert snapshot != null;
         Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
         assert customer_class != null;
@@ -76,149 +81,172 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         holder.frame_number_value.setText(customer_class.getFrame_no());
         holder.address_line_one.setText(customer_class.address_line_2);
         holder.address_line_two.setText(customer_class.getAddress_line_3());
-        if(customer_class.getMobile_1()!=null && !customer_class.getMobile_1().equals("")){
+        if (customer_class.getMobile_1() != null && !customer_class.getMobile_1().equals("")) {
             holder.mobile_one_value.setText(String.valueOf(customer_class.mobile_1));
         }
-        if(customer_class.getMobile_1() == 0){
+        if (customer_class.getMobile_1() == 0) {
             holder.mobile_one_value.setText("");
         }
-       if(customer_class.getMobile_2()!=null){
-           holder.mobile_two_value.setText(String.valueOf(customer_class.mobile_2));
-       }
-       if(customer_class.getMobile_2() == 0){
-           holder.mobile_two_value.setText("");
-       }
+        if (customer_class.getMobile_2() != null) {
+            holder.mobile_two_value.setText(String.valueOf(customer_class.mobile_2));
+        }
+        if (customer_class.getMobile_2() == 0) {
+            holder.mobile_two_value.setText("");
+        }
 
         holder.english_check_box.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                BASIC_DATA_HOLDER.progress_bar();
+                global_mobile1_selection = holder.mobile_selected.isChecked();
+                global_mobile2_selection = holder.phone_selected.isChecked();
                 Make_Contact.sending_message = true;
-                long todays_date = calendar.getTimeInMillis();
-                calendar.set(Calendar.HOUR,0);
-                calendar.set(Calendar.MILLISECOND,0);
-                calendar.set(Calendar.SECOND,0);
-                calendar.set(Calendar.MINUTE,0);
+                calendar.set(Calendar.HOUR, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                todays_date = calendar.getTimeInMillis();
+
+                frame_no = customer_class.getFrame_no();
+                customer_class_gloabl = customer_class;
+
+                databaseReference.child("LOGS").child(customer_class.getFrame_no()).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            databaseReference.child("LOGS").child(customer_class.getFrame_no()).limitToLast(1).addChildEventListener(date_check);
+                        } else {
+                            if (holder.mobile_selected.isChecked() && customer_class.getMobile_1() != null) {
+                                try {
+                                    String break_line = "%0A";
+                                    String mobile = String.valueOf(customer_class.getMobile_1());
+                                    String msg;
+                                    if (service_status(customer_class.getDue_date())) {
+                                        msg = "Dear " + customer_class.getCustomer_name() + " Ji,"+ break_line + "Your " + customer_class.getModel() + " is due for service. *The due date is " + customer_class.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                                "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "▬▬▬▬▬▬▬▬▬▬▬▬▬▬" + break_line + "" + break_line + customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+
+                                    } else {
+                                      msg =  "Dear " + customer_class.getCustomer_name() + " Ji,"+ break_line + "Your " + customer_class.getModel() + " has missed its service. *The due date was " + customer_class.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                                "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "▬▬▬▬▬▬▬▬▬▬▬▬▬▬" + break_line + "" + break_line + customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " को किया जाना चाहिए था|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+                                    }
 
 
+                                    String mainMessage = "";
+
+                                    for (String str : msg.split(break_line)) {
+
+                                        mainMessage = mainMessage + str + "\n";
+
+                                        Log.d("string_test", "call: " + mainMessage);
+                                        ;
+                                    }
+                                    String user = "";
+                                    String frame_no = customer_class.getFrame_no();
+                                    String message = mainMessage;
+
+                                    String contact_date = String.valueOf(todays_date);
+                                    String contact_type = "WATSAPP";
+                                    String contacted_number;
+                                    if (holder.mobile_selected.isChecked()) {
+                                        contacted_number = String.valueOf(customer_class.getMobile_1());
+
+                                    } else {
+                                        contacted_number = String.valueOf(customer_class.getMobile_2());
+                                    }
+                                    long push_value = Calendar.getInstance().getTimeInMillis();
+                                    LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
+                                    databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+
+                                    activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
 
 
-                if (holder.mobile_selected.isChecked() && customer_class.getMobile_1() != null) {
-                    try {
-                        String break_line = "%0A";
-                        String mobile = String.valueOf(customer_class.getMobile_1());
-                        String msg;
-                        if(service_status(customer_class.getDue_date())){
-                            msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " is due for service. *The due date is " + customer_class.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
-                                    "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210"+break_line+""+break_line+"±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±"+break_line+""+break_line+customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|"+ break_line +"*वर्कशॉप का समय:*"+ break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।"+ break_line +"रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।"+ break_line + "लक्ष्मी टीवीएस" +break_line+ "कृपया कॉल करें : 8872084210, 8872084211";
+                                    String key = snapshot.getKey();
 
-                        }else{
-                            msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " has missed its service. *The due date was " + customer_class.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
-                                    "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" +break_line+""+break_line+"±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±"+break_line+""+break_line+customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " को किया जाना चाहिए था|*"+ break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|"+ break_line +"*वर्कशॉप का समय:*"+ break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।"+ break_line +"रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।"+ break_line + "लक्ष्मी टीवीएस" +break_line+ "कृपया कॉल करें : 8872084210, 8872084211";
+
+                                    update_counter();
+                                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                                } catch (Exception e) {
+                                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                                }
+                            } else if (holder.phone_selected.isChecked() && customer_class.getMobile_2() != null) {
+                                try {
+                                    String break_line = "%0A";
+                                    String mobile = String.valueOf(customer_class.getMobile_2());
+                                    String msg;
+                                    if (service_status(customer_class.getDue_date())) {
+                                        msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " is due for service. *The due date is " + customer_class.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                                "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "▬▬▬▬▬▬▬▬▬▬▬▬▬▬" + break_line + "" + break_line + customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+
+                                    } else {
+                                        msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " has missed its service. *The due date was " + customer_class.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                                "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "▬▬▬▬▬▬▬▬▬▬▬▬▬▬" + break_line + "" + break_line + customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " को किया जाना चाहिए था|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+                                    }
+
+
+                                    String mainMessage = "";
+
+                                    for (String str : msg.split(break_line)) {
+
+                                        mainMessage = mainMessage + str + "\n";
+
+                                        Log.d("string_test", "call: " + mainMessage);
+                                        ;
+                                    }
+                                    String user = "";
+                                    String frame_no = customer_class.getFrame_no();
+                                    String message = mainMessage;
+
+                                    String contact_date = String.valueOf(todays_date);
+                                    String contact_type = "WATSAPP";
+                                    String contacted_number;
+                                    if (holder.mobile_selected.isChecked()) {
+                                        contacted_number = String.valueOf(customer_class.getMobile_1());
+
+                                    } else {
+                                        contacted_number = String.valueOf(customer_class.getMobile_2());
+                                    }
+
+                                    long push_value = Calendar.getInstance().getTimeInMillis();
+                                    LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
+                                    databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+
+                                    activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
+                                    String key = snapshot.getKey();
+
+
+                                    update_counter();
+                                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                                } catch (Exception e) {
+                                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                                    //whatsapp app not install
+                                }
+                            }
                         }
-
-
-
-
-                        String mainMessage = "";
-
-                        for (String str : msg.split(break_line)) {
-
-                            mainMessage = mainMessage + str + "\n";
-
-                            Log.d("string_test", "call: " + mainMessage);
-                            ;
-                        }
-                        String user = "";
-                        String frame_no = customer_class.getFrame_no();
-                        String message = mainMessage ;
-
-                        String contact_date =  String.valueOf(todays_date);
-                        String contact_type = "WATSAPP";
-                        String contacted_number;
-                        if(holder.mobile_selected.isChecked()){
-                            contacted_number = String.valueOf(customer_class.getMobile_1());
-
-                        }else{
-                            contacted_number = String.valueOf(customer_class.getMobile_2());
-                        }
-                        LOG_CLASS log_class = new LOG_CLASS("",frame_no,message,contact_date,contact_type,contacted_number);
-                        databaseReference.child("LOGS").child(frame_no).push().setValue(log_class);
-
-                        activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)),Make_Contact.REQUEST_CODE);
-
-
-                        String key = snapshot.getKey();
-
-
-                        update_counter();
-                    } catch (Exception e) {
-                        //whatsapp app not install
                     }
-                } else if (holder.phone_selected.isChecked() && customer_class.getMobile_2() != null) {
-                    try {
-                        String break_line = "%0A";
-                        String mobile = String.valueOf(customer_class.getMobile_2());
-                        String msg;
-                        if(service_status(customer_class.getDue_date())){
-                            msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " is due for service. *The due date is " + customer_class.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
-                                    "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210"+break_line+""+break_line+"±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±"+break_line+""+break_line+customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|"+ break_line +"*वर्कशॉप का समय:*"+ break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।"+ break_line +"रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।"+ break_line + "लक्ष्मी टीवीएस" +break_line+ "कृपया कॉल करें : 8872084210, 8872084211";
 
-                        }else{
-                            msg = "Dear " + customer_class.getCustomer_name() + " Ji," + break_line + "Your " + customer_class.getModel() + " has missed its service. *The due date was " + customer_class.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
-                                    "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" +break_line+""+break_line+"±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±"+break_line+""+break_line+customer_class.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class.getDue_date() + " को किया जाना चाहिए था|*"+ break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|"+ break_line +"*वर्कशॉप का समय:*"+ break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।"+ break_line +"रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।"+ break_line + "लक्ष्मी टीवीएस" +break_line+ "कृपया कॉल करें : 8872084210, 8872084211";
-                        }
-
-
-
-
-                        String mainMessage = "";
-
-                        for (String str : msg.split(break_line)) {
-
-                            mainMessage = mainMessage + str + "\n";
-
-                            Log.d("string_test", "call: " + mainMessage);
-                            ;
-                        }
-                        String user = "";
-                        String frame_no = customer_class.getFrame_no();
-                        String message = mainMessage ;
-
-                        String contact_date =  String.valueOf(todays_date);
-                        String contact_type = "WATSAPP";
-                        String contacted_number;
-                        if(holder.mobile_selected.isChecked()){
-                            contacted_number = String.valueOf(customer_class.getMobile_1());
-
-                        }else{
-                            contacted_number = String.valueOf(customer_class.getMobile_2());
-                        }
-
-
-                        LOG_CLASS log_class = new LOG_CLASS("",frame_no,message,contact_date,contact_type,contacted_number);
-                        databaseReference.child("LOGS").child(frame_no).push().setValue(log_class);
-
-                        activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)),Make_Contact.REQUEST_CODE);
-                        String key = snapshot.getKey();
-
-
-                        update_counter();
-                    } catch (Exception e) {
-                        //whatsapp app not install
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        BASIC_DATA_HOLDER.loading_dialog.dismiss();
                     }
-                }
+                });
+
+
             }
         });
         holder.mobile_selected.setChecked(true);
         holder.phone_selected.setChecked(false);
 
+        global_mobile1_selection = holder.mobile_selected.isChecked();
+        global_mobile2_selection = holder.phone_selected.isChecked();
         holder.mobile_selected.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(holder.mobile_selected.isChecked()){
+                if (holder.mobile_selected.isChecked()) {
                     holder.phone_selected.setChecked(false);
-                }else{
+                    global_mobile1_selection = true;
+                } else {
                     holder.phone_selected.setChecked(true);
+                    global_mobile1_selection = false;
                 }
             }
         });
@@ -226,10 +254,12 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         holder.phone_selected.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(holder.phone_selected.isChecked()){
+                if (holder.phone_selected.isChecked()) {
                     holder.mobile_selected.setChecked(false);
-                }else{
+                    global_mobile2_selection = true;
+                } else {
                     holder.mobile_selected.setChecked(true);
+                    global_mobile2_selection = false;
                 }
             }
         });
@@ -280,11 +310,14 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     ChildEventListener childEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+          if(previousChildName==null){
+              BASIC_DATA_HOLDER.loading_dialog.dismiss();
+          }
             hashMap.put(snapshot.getKey(), snapshot);
             Log.d("testing", "onChildAdded: " + snapshot.getKey());
             String key = snapshot.getKey();
             key_holder.add(key);
-           notifyDataSetChanged();
+            notifyDataSetChanged();
         }
 
         @Override
@@ -319,18 +352,18 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     public boolean service_status(String due_date_as_received) {
 
         String string_date = due_date_as_received;
-        Log.d("due_date_status", "service_status: "+ due_date_as_received);
+        Log.d("due_date_status", "service_status: " + due_date_as_received);
         SimpleDateFormat f = new SimpleDateFormat("dd-MMM-yy");
         try {
             Date d = f.parse(string_date);
             long milliseconds = d.getTime();
             long todays_time = Calendar.getInstance().getTimeInMillis();
-            Log.d("due_date_status", "due_date: "+ milliseconds);
-            Log.d("due_date_status", "todays date: "+ milliseconds);
-            if(milliseconds > todays_time){
-                return  true;
-            }else{
-                return  false;
+            Log.d("due_date_status", "due_date: " + milliseconds);
+            Log.d("due_date_status", "todays date: " + milliseconds);
+            if (milliseconds >= todays_time) {
+                return true;
+            } else {
+                return false;
             }
 
         } catch (ParseException e) {
@@ -341,22 +374,22 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     }
 
 
-public void counter_check (){
+    public void counter_check() {
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR,0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
-        cal.set(Calendar.MILLISECOND,0);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         long today = cal.getTimeInMillis();
-    Log.d("counter", "Todays date at start: "+  today);
+        Log.d("counter", "Todays date at start: " + today);
 
         String string_today = String.valueOf(today);
         databaseReference.child("Counter").child(string_today).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
+                if (snapshot.exists()) {
                     Make_Contact.counter_text_box.setText(snapshot.getValue(String.class));
-                }else{
+                } else {
                     databaseReference.child("Counter").child(string_today).setValue("0");
                     Make_Contact.counter_text_box.setText("0");
                 }
@@ -367,18 +400,186 @@ public void counter_check (){
                 Make_Contact.counter_text_box.setText("0");
             }
         });
-}
-    public void update_counter(){
+    }
+
+    public void update_counter() {
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR,0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
-        cal.set(Calendar.MILLISECOND,0);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         long today = cal.getTimeInMillis();
-        Log.d("counter", "On Update: "+  today);
+        Log.d("counter", "On Update: " + today);
         String string_today = String.valueOf(today);
         int current = Integer.parseInt(Make_Contact.counter_text_box.getText().toString());
         int new_counter = current + 1;
         databaseReference.child("Counter").child(string_today).setValue(String.valueOf(new_counter));
     }
+
+
+    ChildEventListener date_check = new ChildEventListener() {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+            if (previousChildName == null) {
+                databaseReference.child("LOGS").child(customer_class_gloabl.getFrame_no()).limitToLast(1).removeEventListener(date_check);
+                String previous_date_value = snapshot.child("contact_date").getValue(String.class);
+                Log.d("snapshot", "onChildAdded: key " + snapshot.getKey());
+                long previous_date_long = Long.parseLong(previous_date_value);
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                long today = cal.getTimeInMillis();
+                Log.d("snapshot", "onChildAdded: " + today);
+                Log.d("snapshot", "previous date: " + previous_date_long);
+                if (today - previous_date_long >= 345600000) {
+                    if (global_mobile1_selection && customer_class_gloabl.getMobile_1() != null) {
+                        try {
+                            Log.d("snapshot", "location : childevent ok ");
+                            String break_line = "%0A";
+                            String mobile = String.valueOf(customer_class_gloabl.getMobile_1());
+                            String msg;
+                            if (service_status(customer_class_gloabl.getDue_date())) {
+                                msg = "Dear " + customer_class_gloabl.getCustomer_name() + " Ji," + break_line + "Your " + customer_class_gloabl.getModel() + " is due for service. *The due date is " + customer_class_gloabl.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                        "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±" + break_line + "" + break_line + customer_class_gloabl.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class_gloabl.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class_gloabl.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+
+                            } else {
+                                msg = "Dear " + customer_class_gloabl.getCustomer_name() + " Ji," + break_line + "Your " + customer_class_gloabl.getModel() + " has missed its service. *The due date was " + customer_class_gloabl.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                        "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±" + break_line + "" + break_line + customer_class_gloabl.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class_gloabl.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class_gloabl.getDue_date() + " को किया जाना चाहिए था|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+                            }
+
+
+                            String mainMessage = "";
+
+                            for (String str : msg.split(break_line)) {
+
+                                mainMessage = mainMessage + str + "\n";
+
+                                Log.d("string_test", "call: " + mainMessage);
+                                ;
+                            }
+                            String user = "";
+                            String frame_no = customer_class_gloabl.getFrame_no();
+                            String message = mainMessage;
+
+                            String contact_date = String.valueOf(todays_date);
+                            String contact_type = "WATSAPP";
+                            String contacted_number;
+                            if (global_mobile1_selection) {
+                                contacted_number = String.valueOf(customer_class_gloabl.getMobile_1());
+
+                            } else {
+                                contacted_number = String.valueOf(customer_class_gloabl.getMobile_2());
+                            }
+                            long push_value = Calendar.getInstance().getTimeInMillis();
+
+                            LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
+                            databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+
+                            activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
+
+
+                            String key = snapshot.getKey();
+
+
+                            update_counter();
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        } catch (Exception e) {
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                            //whatsapp app not install
+                        }
+                    } else if (global_mobile2_selection && customer_class_gloabl.getMobile_2() != null) {
+                        try {
+                            String break_line = "%0A";
+                            String mobile = String.valueOf(customer_class_gloabl.getMobile_2());
+                            String msg;
+                            if (service_status(customer_class_gloabl.getDue_date())) {
+                                msg = "Dear " + customer_class_gloabl.getCustomer_name() + " Ji," + break_line + "Your " + customer_class_gloabl.getModel() + " is due for service. *The due date is " + customer_class_gloabl.getDue_date() + ".*" + break_line + "Timely service of your Two-Wheeler *will give you good performance and great average*. Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                        "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±" + break_line + "" + break_line + customer_class_gloabl.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class_gloabl.getModel() + " की सर्विस का टाइम आ गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class_gloabl.getDue_date() + " किया जाना चाहिए|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की आपको *बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+
+                            } else {
+                                msg = "Dear " + customer_class_gloabl.getCustomer_name() + " Ji," + break_line + "Your " + customer_class_gloabl.getModel() + " has missed its service. *The due date was " + customer_class_gloabl.getDue_date() + ".*" + break_line + "Without service *vehilce performance and average may not be best.* Kindly bring your vehicle to the workshop soon." + break_line + "*Workshop Timming:*" + break_line +
+                                        "Monday - Friday : 9am - 6:00pm" + break_line + "Sunday : 9am - 3pm" + break_line + "Laxmi TVS" + break_line + "Call : 8872084211, 8872084210" + break_line + "" + break_line + "±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±" + break_line + "" + break_line + customer_class_gloabl.getCustomer_name() + " जी," + break_line + "आपके दुपहिया वाहन " + customer_class_gloabl.getModel() + " की सर्विस का टाइम चला गया गया है| *हमारे रिकॉर्ड के अनुसार सर्विस " + customer_class_gloabl.getDue_date() + " को किया जाना चाहिए था|*" + break_line + "टाइम से सर्विस करवाने का फ़ायदा यह है की *आपको बेहतरीन एवरेज और परफॉरमेंस* मिलती है| कृपया वर्कशॉप में जल्दी आए|" + break_line + "*वर्कशॉप का समय:*" + break_line + "सोमवार - शनिवार: सुबह 9 बजे से - शाम 6 बजे तक।" + break_line + "रविवार: सुबह 9 बजे से - दोपहर 3 बजे तक।" + break_line + "लक्ष्मी टीवीएस" + break_line + "कृपया कॉल करें : 8872084210, 8872084211";
+                            }
+
+
+                            String mainMessage = "";
+
+                            for (String str : msg.split(break_line)) {
+
+                                mainMessage = mainMessage + str + "\n";
+
+                                Log.d("string_test", "call: " + mainMessage);
+                                ;
+                            }
+                            String user = "";
+                            String frame_no = customer_class_gloabl.getFrame_no();
+                            String message = mainMessage;
+
+                            String contact_date = String.valueOf(todays_date);
+                            String contact_type = "WATSAPP";
+                            String contacted_number;
+                            if (global_mobile2_selection) {
+                                contacted_number = String.valueOf(customer_class_gloabl.getMobile_1());
+
+                            } else {
+                                contacted_number = String.valueOf(customer_class_gloabl.getMobile_2());
+                            }
+                            long push_value = Calendar.getInstance().getTimeInMillis();
+
+                            LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
+                            databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+
+                            activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
+                            String key = snapshot.getKey();
+
+
+                            update_counter();
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        } catch (Exception e) {
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                            //whatsapp app not install
+                        }
+                    }
+                } else {
+                    DataSnapshot snapshot1 = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                    remove_after_message_sent(snapshot1.getKey());
+                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                }
+            }
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+
+        }
+    };
+
+    public void remove_after_message_sent(String key) {
+        Log.d("remove", "remove_after_message_sent: " + key);
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                Log.d("remove", "removed successfully ");
+                BASIC_DATA_HOLDER.loading_dialog.dismiss();
+            }
+        });
+    }
 }
+

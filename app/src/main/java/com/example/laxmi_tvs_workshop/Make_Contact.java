@@ -43,6 +43,7 @@ public static boolean sending_message = false;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_contact);
+        BASIC_DATA_HOLDER.setActivity(this);
 
         databaseReference = FirebaseDatabase.getInstance("https://laxmi-tvs-workshop-default-rtdb.asia-southeast1.firebasedatabase.app").getReference();
         go_back_home = (ImageButton) findViewById(R.id.go_back_home);
@@ -53,17 +54,7 @@ public static boolean sending_message = false;
         successDialog.setCancelable(true);
         counter_text_box = (TextView)findViewById(R.id.counter_text_box);
 
-
-        go_back_home.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent go_to_settings_intent= new Intent(Make_Contact.this, MainActivity.class);
-                go_to_settings_intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(go_to_settings_intent);
-                finish();
-            }
-        });
-
+        
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,DividerItemDecoration.VERTICAL);
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this,R.drawable.divider));
         customer_list.addItemDecoration(dividerItemDecoration);

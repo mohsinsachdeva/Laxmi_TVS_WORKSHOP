@@ -229,6 +229,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+
             <ImageButton
                 android:id="@+id/english_check_box"
                 android:layout_width="60dp"
@@ -253,6 +254,17 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/english_check_box"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/service_history_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/history_"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.21"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 

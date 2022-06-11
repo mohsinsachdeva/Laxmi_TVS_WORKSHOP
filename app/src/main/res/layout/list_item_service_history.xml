@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <LinearLayout
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/grey">
+            <TextView
+                android:id="@+id/dte_label"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:text="Date"
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:gravity="start"
+                android:padding="5dp"/>
+
+            <TextView
+                android:id="@+id/remark_label"
+                android:layout_width="100dp"
+                android:layout_height="80dp"
+                android:text="Remark"
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:gravity="start"
+                android:padding="5dp"/>
+
+
+
+
+
+
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="3">
+            <TextView
+                android:id="@+id/date_value"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:gravity="start"
+                android:background="@drawable/another_text_border"
+                android:padding="5dp"/>
+
+            <TextView
+                android:id="@+id/remark_value"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:gravity="start"
+                android:background="@drawable/another_text_border"
+                android:padding="5dp"/>
+
+
+
+
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+
+
+</LinearLayout>

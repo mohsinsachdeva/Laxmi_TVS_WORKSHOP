@@ -121,6 +121,11 @@ public static boolean sending_message = false;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RESULT_OK){
+            Log.d("activityresult", "RESULT OK" );
+        }else{
+            Log.d("activityresult", "RESULT NOT OK" );
+        }
         Log.d("activityresult", "onActivityResult: request code "+ requestCode);
         Log.d("activityresult", "onActivityResult: request code "+ resultCode);
 
@@ -138,4 +143,6 @@ public static boolean sending_message = false;
         startActivity(intent);
         finish();
     }
+
+
 }

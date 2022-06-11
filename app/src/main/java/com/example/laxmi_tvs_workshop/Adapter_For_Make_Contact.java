@@ -1,20 +1,33 @@
 package com.example.laxmi_tvs_workshop;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
@@ -45,7 +58,10 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     boolean global_mobile1_selection;
     boolean global_mobile2_selection;
     long todays_date;
-
+    boolean permission_result;
+    final int REQUEST_CODE = 1234;
+    Intent callIntent;
+    Dialog service_history_dialog;
     public Adapter_For_Make_Contact(Activity activity, DatabaseReference databaseReference) {
         this.activity = activity;
         this.databaseReference = databaseReference;
@@ -56,7 +72,29 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         BASIC_DATA_HOLDER.progress_bar();
 
         Log.d("testing", "Adapter_For_Make_Contact: CALLED");
-        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addChildEventListener(childEventListener);
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    if(snapshot.getChildrenCount()>0){
+                        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addChildEventListener(childEventListener);
+                    }else{
+                        BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        Toast.makeText(activity, "NO DATA IS AVAILABLE", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                    Toast.makeText(activity, "NO DATA IS AVAILABLE", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                Toast.makeText(activity, "SOMETHING WENT WRONG", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
     }
 
@@ -263,6 +301,87 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 }
             }
         });
+        holder.call_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(getPermissions()){
+                    // Create the intent.
+                    callIntent = new Intent(Intent.ACTION_CALL);
+                    // Set the data for the intent as the phone number.
+
+                    if (holder.mobile_selected.isChecked()) {
+                        callIntent.setData(Uri.parse("tel:" + holder.mobile_one_value.getText().toString()));
+                        // If package resolves to an app, send intent.
+                        if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
+                            if (getPermissions()) {
+                                activity.startActivityForResult(callIntent,1234);
+                            }
+                        } else {
+
+                            Log.e("calling", "Can't resolve app for ACTION_CALL Intent.");
+                        }
+                    }else{
+                        callIntent.setData(Uri.parse("tel:" + holder.mobile_two_value.getText().toString()));
+                        // If package resolves to an app, send intent.
+                        if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
+                            if (getPermissions()) {
+                                activity.startActivity(callIntent);
+                            }
+                        } else {
+
+                            Log.e("calling", "Can't resolve app for ACTION_CALL Intent.");
+                        }
+                    }
+                }
+            }
+        });
+        holder.service_history_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+              service_history_dialog = new Dialog(activity);
+              service_history_dialog.setCancelable(true);
+              service_history_dialog.setContentView(R.layout.service_history);
+                EditText enter_remark = (EditText)service_history_dialog.findViewById(R.id.enter_remark);
+                ImageView send_remark = (ImageView)service_history_dialog.findViewById(R.id.send_remark);
+                RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(activity.getApplicationContext());
+
+                androidx.recyclerview.widget.RecyclerView recyclerView
+                        = (androidx.recyclerview.widget.RecyclerView) service_history_dialog.findViewById(R.id.service_history_recycleview);
+                Adapter_For_Make_Service_History adapter_for_make_service_history = new Adapter_For_Make_Service_History(activity,databaseReference,customer_class.getFrame_no());
+                DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(activity,DividerItemDecoration.VERTICAL);
+                dividerItemDecoration.setDrawable(ContextCompat.getDrawable(activity,R.drawable.divider));
+                recyclerView.addItemDecoration(dividerItemDecoration);
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(adapter_for_make_service_history);
+
+
+                send_remark.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(!enter_remark.getText().toString().equals("")){
+                            BASIC_DATA_HOLDER.progress_bar();
+                            String new_remark = enter_remark.getText().toString();
+                            long date = Calendar.getInstance().getTimeInMillis();
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss");
+                            String new_date = dateFormat.format(date);
+                            Remarks_Class remarks_class = new Remarks_Class(new_date,new_remark);
+                            databaseReference.child("remarks").child(customer_class.getFrame_no()).push().setValue(remarks_class).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void unused) {
+                                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                                    enter_remark.setText("");
+                                }
+                            });
+                        }else{
+                            Toast.makeText(activity, "Please Add Remark", Toast.LENGTH_SHORT).show();
+                        }
+                        }
+
+                });
+              service_history_dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+              service_history_dialog.show();
+            }
+        });
 
     }
 
@@ -285,6 +404,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         ImageView call_button;
         CheckBox mobile_selected;
         CheckBox phone_selected;
+        ImageButton service_history_button;
+
 
 
         public Holder(@NonNull View itemView) {
@@ -302,6 +423,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             call_button = (ImageView) itemView.findViewById(R.id.call_button);
             mobile_selected = (CheckBox) itemView.findViewById(R.id.mobile_selected);
             phone_selected = (CheckBox) itemView.findViewById(R.id.phone_selected);
+            service_history_button = (ImageButton) itemView.findViewById(R.id.service_history_button);
 
         }
     }
@@ -580,6 +702,120 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 BASIC_DATA_HOLDER.loading_dialog.dismiss();
             }
         });
+    }
+
+
+
+    public boolean getPermissions() {
+
+        if (Build.VERSION.SDK_INT >= 29) {
+
+
+            // permissions video https://www.youtube.com/watch?v=AyhkpvQwFsI
+
+
+            if ((ContextCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE)) +
+                    (ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS)
+                    ) + (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_MEDIA_LOCATION))
+
+                    != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CALL_PHONE) ||
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.SEND_SMS)
+                        ||
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_MEDIA_LOCATION)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setTitle("Please Grant Permissions");
+                    builder.setMessage("These Permissions are necessary for the App to function properly ");
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
+                                    , Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_MEDIA_LOCATION}, REQUEST_CODE);
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", null);
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                } else {
+                    ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
+                            , Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_MEDIA_LOCATION}, REQUEST_CODE);
+
+                }
+                ActivityCompat.OnRequestPermissionsResultCallback mr = new ActivityCompat.OnRequestPermissionsResultCallback() {
+                    @Override
+                    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+                        if (requestCode > 0 && grantResults[0] == 123 && grantResults[1] == 123 && grantResults[2] == 123) {
+
+                            permission_result = true;
+                        } else {
+                            permission_result = false;
+                        }
+                    }
+                };
+            } else {
+                permission_result = true;
+            }
+
+            return permission_result;
+        }else{
+            if ((ContextCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE)) +
+                    (ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS)
+                    )
+                    != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CALL_PHONE) ||
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.SEND_SMS)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setTitle("Please Grant Permissions");
+                    builder.setMessage("These Permissions are necessary for the App to function properly ");
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
+                                    , Manifest.permission.SEND_SMS}, REQUEST_CODE);
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", null);
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                } else {
+                    ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
+                            , Manifest.permission.SEND_SMS}, REQUEST_CODE);
+
+                }
+                ActivityCompat.OnRequestPermissionsResultCallback mr = new ActivityCompat.OnRequestPermissionsResultCallback() {
+                    @Override
+                    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+                        if (requestCode > 0 && grantResults[0] == 123 && grantResults[1] == 123) {
+
+                            permission_result = true;
+                        } else {
+                            permission_result = false;
+                        }
+                    }
+                };
+            } else {
+                permission_result = true;
+            }
+
+            return permission_result;
+        }
+
     }
 }
 

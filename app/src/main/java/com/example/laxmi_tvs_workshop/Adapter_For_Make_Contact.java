@@ -437,7 +437,13 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             Customer_Class customer_class_for_reminder = customer_class;
                             customer_class_for_reminder.setRecycle_date(reminder_date);
                             customer_class_for_reminder.setService_type(BASIC_DATA_HOLDER.getCalling_type());
-                            databaseReference.child("reminder").child(customer_class.getFrame_no()).setValue(customer_class);
+                            databaseReference.child("reminder").child(customer_class.getFrame_no()).setValue(customer_class).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void unused) {
+                                    Toast.makeText(activity, "Reminder Set Successfully", Toast.LENGTH_SHORT).show();
+
+                                }
+                            });
                         }else{
                             Toast.makeText(activity, "Sunday Reminder Not Allowed", Toast.LENGTH_SHORT).show();
                         }

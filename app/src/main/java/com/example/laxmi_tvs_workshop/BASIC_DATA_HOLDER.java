@@ -9,7 +9,15 @@ import pl.droidsonroids.gif.GifImageView;
 public class BASIC_DATA_HOLDER {
     public static Dialog loading_dialog;
 
+    public static boolean message_mode;
 
+    public static boolean isMessage_mode() {
+        return message_mode;
+    }
+
+    public static void setMessage_mode(boolean message_mode) {
+        BASIC_DATA_HOLDER.message_mode = message_mode;
+    }
 
     public BASIC_DATA_HOLDER(){
 

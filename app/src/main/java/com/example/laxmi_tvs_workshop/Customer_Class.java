@@ -12,6 +12,8 @@ public class Customer_Class {
     String address_line_3;
     Long mobile_1;
     Long mobile_2;
+    String recycle_date;
+    String service_type;
 
     public String getCustomer_name() {
         return customer_name;
@@ -87,6 +89,36 @@ public class Customer_Class {
         this.address_line_3 = address_line_3;
         this.mobile_1 = mobile_1;
         this.mobile_2 = mobile_2;
+    }
+
+    public String getRecycle_date() {
+        return recycle_date;
+    }
+
+    public void setRecycle_date(String recycle_date) {
+        this.recycle_date = recycle_date;
+    }
+
+    public String getService_type() {
+        return service_type;
+    }
+
+    public void setService_type(String service_type) {
+        this.service_type = service_type;
+    }
+
+    public Customer_Class(String customer_name, String model, String due_date, String frame_no,
+                          String address_line_2, String address_line_3, Long mobile_1, Long mobile_2, String recycle_date, String service_type){
+        this.customer_name = customer_name;
+        this.model = model;
+        this.due_date = due_date;
+        this.frame_no = frame_no;
+        this.address_line_2 = address_line_2;
+        this.address_line_3 = address_line_3;
+        this.mobile_1 = mobile_1;
+        this.mobile_2 = mobile_2;
+        this.recycle_date = recycle_date;
+        this.service_type = service_type;
     }
 
 

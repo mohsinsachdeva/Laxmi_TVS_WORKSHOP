@@ -14,13 +14,15 @@
         android:layout_height="50dp"
         android:weightSum="3"
         android:background="@color/grey">
-
-        <ImageButton
-            android:id="@+id/go_back_home"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:background="@drawable/back_button_image" />
+        <TextView
+            android:id="@+id/call_counter"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
+            android:background="@color/light"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="0dp"

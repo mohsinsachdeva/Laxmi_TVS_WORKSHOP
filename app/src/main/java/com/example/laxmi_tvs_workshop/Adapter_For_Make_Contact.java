@@ -1,14 +1,23 @@
 package com.example.laxmi_tvs_workshop;
 
+import static android.provider.CallLog.Calls.LIMIT_PARAM_KEY;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,10 +25,12 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,6 +48,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firestore.v1.StructuredQuery;
+
+import org.apache.poi.ss.formula.functions.Columns;
+import org.apache.poi.ss.formula.functions.Offset;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,6 +62,7 @@ import java.util.HashMap;
 
 
 public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_Make_Contact.Holder> {
+   public static final String KEY_NAME_MESSAGE = "message";
     Activity activity;
     DatabaseReference databaseReference;
     public static HashMap<String, DataSnapshot> hashMap;
@@ -62,6 +78,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     final int REQUEST_CODE = 1234;
     Intent callIntent;
     Dialog service_history_dialog;
+    String contact_number_in_use;
+    String global_key;
+
     public Adapter_For_Make_Contact(Activity activity, DatabaseReference databaseReference) {
         this.activity = activity;
         this.databaseReference = databaseReference;
@@ -147,12 +166,18 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
                 frame_no = customer_class.getFrame_no();
                 customer_class_gloabl = customer_class;
+                if(global_mobile1_selection){
+                    contact_number_in_use = String.valueOf(customer_class.getMobile_1());
+                }else{
+                    contact_number_in_use = String.valueOf(customer_class.getMobile_2());
+                }
 
-                databaseReference.child("LOGS").child(customer_class.getFrame_no()).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                databaseReference.child("LOGS").child(contact_number_in_use).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
-                            databaseReference.child("LOGS").child(customer_class.getFrame_no()).limitToLast(1).addChildEventListener(date_check);
+                            global_key = key_holder.get(position);
+                            databaseReference.child("LOGS").child(contact_number_in_use).limitToLast(1).addChildEventListener(date_check);
                         } else {
                             if (holder.mobile_selected.isChecked() && customer_class.getMobile_1() != null) {
                                 try {
@@ -193,7 +218,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                                     }
                                     long push_value = Calendar.getInstance().getTimeInMillis();
                                     LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
-                                    databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+                                    databaseReference.child("LOGS").child(contact_number_in_use).child(String.valueOf(push_value)).setValue(log_class);
 
                                     activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
 
@@ -246,7 +271,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
                                     long push_value = Calendar.getInstance().getTimeInMillis();
                                     LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
-                                    databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+                                    databaseReference.child("LOGS").child(contact_number_in_use).child(String.valueOf(push_value)).setValue(log_class);
 
                                     activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
                                     String key = snapshot.getKey();
@@ -314,6 +339,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         // If package resolves to an app, send intent.
                         if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
                             if (getPermissions()) {
+                                Make_Contact.sending_message = true;
                                 activity.startActivityForResult(callIntent,1234);
                             }
                         } else {
@@ -325,6 +351,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         // If package resolves to an app, send intent.
                         if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
                             if (getPermissions()) {
+                                Make_Contact.sending_message = true;
                                 activity.startActivity(callIntent);
                             }
                         } else {
@@ -382,7 +409,45 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
               service_history_dialog.show();
             }
         });
+        holder.cancel_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                remove_after_message_sent(snapshot.getKey());
+            }
+        });
 
+        holder.reminder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+
+
+                DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        cal.set(Calendar.YEAR,year);
+                        cal.set(Calendar.MONTH,month);
+                        cal.set(Calendar.DAY_OF_MONTH,dayOfMonth);
+                        if(cal.get(Calendar.DAY_OF_WEEK)==7){
+                            String reminder_date = String.valueOf(cal.getTimeInMillis());
+                            Customer_Class customer_class_for_reminder = customer_class;
+                            customer_class_for_reminder.setRecycle_date(reminder_date);
+                            customer_class_for_reminder.setService_type(BASIC_DATA_HOLDER.getCalling_type());
+                            databaseReference.child("reminder").child(customer_class.getFrame_no()).setValue(customer_class);
+                        }else{
+                            Toast.makeText(activity, "Sunday Reminder Not Allowed", Toast.LENGTH_SHORT).show();
+                        }
+
+
+                    }
+                };
+                new DatePickerDialog(activity,android.R.style.Theme_Holo_Light_Dialog_MinWidth,dateSetListener,cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+            }
+        });
     }
 
     @Override
@@ -405,6 +470,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         CheckBox mobile_selected;
         CheckBox phone_selected;
         ImageButton service_history_button;
+        ImageButton cancel_button;
+        ImageButton reminder;
 
 
 
@@ -424,7 +491,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             mobile_selected = (CheckBox) itemView.findViewById(R.id.mobile_selected);
             phone_selected = (CheckBox) itemView.findViewById(R.id.phone_selected);
             service_history_button = (ImageButton) itemView.findViewById(R.id.service_history_button);
-
+            cancel_button = (ImageButton) itemView.findViewById(R.id.cancel);
+            reminder = (ImageButton) itemView.findViewById(R.id.reminder);
         }
     }
 
@@ -506,13 +574,13 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         Log.d("counter", "Todays date at start: " + today);
 
         String string_today = String.valueOf(today);
-        databaseReference.child("Counter").child(string_today).addValueEventListener(new ValueEventListener() {
+        databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     Make_Contact.counter_text_box.setText(snapshot.getValue(String.class));
                 } else {
-                    databaseReference.child("Counter").child(string_today).setValue("0");
+                    databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).setValue("0");
                     Make_Contact.counter_text_box.setText("0");
                 }
             }
@@ -535,7 +603,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         String string_today = String.valueOf(today);
         int current = Integer.parseInt(Make_Contact.counter_text_box.getText().toString());
         int new_counter = current + 1;
-        databaseReference.child("Counter").child(string_today).setValue(String.valueOf(new_counter));
+        databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).setValue(String.valueOf(new_counter));
     }
 
 
@@ -543,7 +611,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         @Override
         public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
             if (previousChildName == null) {
-                databaseReference.child("LOGS").child(customer_class_gloabl.getFrame_no()).limitToLast(1).removeEventListener(date_check);
+                databaseReference.child("LOGS").child(contact_number_in_use).limitToLast(1).removeEventListener(date_check);
                 String previous_date_value = snapshot.child("contact_date").getValue(String.class);
                 Log.d("snapshot", "onChildAdded: key " + snapshot.getKey());
                 long previous_date_long = Long.parseLong(previous_date_value);
@@ -597,7 +665,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             long push_value = Calendar.getInstance().getTimeInMillis();
 
                             LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
-                            databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+                            databaseReference.child("LOGS").child(contact_number_in_use).child(String.valueOf(push_value)).setValue(log_class);
 
                             activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
 
@@ -651,7 +719,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             long push_value = Calendar.getInstance().getTimeInMillis();
 
                             LOG_CLASS log_class = new LOG_CLASS("", frame_no, message, contact_date, contact_type, contacted_number);
-                            databaseReference.child("LOGS").child(frame_no).child(String.valueOf(push_value)).setValue(log_class);
+                            databaseReference.child("LOGS").child(contact_number_in_use).child(String.valueOf(push_value)).setValue(log_class);
 
                             activity.startActivityForResult(new Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=91" + mobile + "&text=" + mainMessage)), Make_Contact.REQUEST_CODE);
                             String key = snapshot.getKey();
@@ -665,9 +733,15 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         }
                     }
                 } else {
-                    DataSnapshot snapshot1 = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
-                    remove_after_message_sent(snapshot1.getKey());
-                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                    if(BASIC_DATA_HOLDER.isMessage_mode()){
+                       // DataSnapshot snapshot1 = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                        remove_after_message_sent(global_key);
+                        BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                    }else{
+                        BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        Toast.makeText(activity, "Message Sent In Last 4 Days", Toast.LENGTH_SHORT).show();
+                    }
+
                 }
             }
         }
@@ -700,6 +774,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             public void onSuccess(Void unused) {
                 Log.d("remove", "removed successfully ");
                 BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                Make_Contact.sending_message = false;
             }
         });
     }
@@ -717,7 +792,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             if ((ContextCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE)) +
                     (ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS)
                     ) + (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_MEDIA_LOCATION))
+                        + (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_CALL_LOG)) +
 
+                    (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_CONTACTS))
                     != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -730,7 +807,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CALL_PHONE) ||
                         ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.SEND_SMS)
                         ||
-                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_MEDIA_LOCATION)) {
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_MEDIA_LOCATION)||
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_CALL_LOG) ||
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_CONTACTS)) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setTitle("Please Grant Permissions");
                     builder.setMessage("These Permissions are necessary for the App to function properly ");
@@ -746,7 +825,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     alertDialog.show();
                 } else {
                     ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
-                            , Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_MEDIA_LOCATION}, REQUEST_CODE);
+                            , Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_MEDIA_LOCATION, Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_CONTACTS}, REQUEST_CODE);
 
                 }
                 ActivityCompat.OnRequestPermissionsResultCallback mr = new ActivityCompat.OnRequestPermissionsResultCallback() {
@@ -768,7 +847,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         }else{
             if ((ContextCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE)) +
                     (ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS)
-                    )
+                    ) + (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_CALL_LOG)
+            ) + (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_CONTACTS)
+            )
                     != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -779,7 +860,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 // for ActivityCompat#requestPermissions for more details.
 
                 if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CALL_PHONE) ||
-                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.SEND_SMS)) {
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.SEND_SMS) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_CALL_LOG)
+                || ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_CONTACTS)){
                     AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setTitle("Please Grant Permissions");
                     builder.setMessage("These Permissions are necessary for the App to function properly ");
@@ -795,7 +878,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     alertDialog.show();
                 } else {
                     ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CALL_PHONE
-                            , Manifest.permission.SEND_SMS}, REQUEST_CODE);
+                            , Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS}, REQUEST_CODE);
 
                 }
                 ActivityCompat.OnRequestPermissionsResultCallback mr = new ActivityCompat.OnRequestPermissionsResultCallback() {
@@ -814,6 +897,72 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             }
 
             return permission_result;
+        }
+
+    }
+
+    public void last_call_details (){
+
+        Log.d("last_call_new", "last_call_details: "+ CallLog.Calls.getLastOutgoingCall(activity));
+        Call_Details callDetails = new Call_Details();
+        Cursor cursor;
+        int offset = 1;
+        Uri contacts = CallLog.Calls.CONTENT_URI;
+       try{
+
+           //Cursor managedCursor = activity.getContentResolver().query(contacts, null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                Log.d("call+duration", "last_call stage one ");
+                cursor =  activity.getContentResolver().query(
+                        CallLog.Calls.CONTENT_URI.buildUpon().appendQueryParameter(LIMIT_PARAM_KEY, "1")
+                                .build(),
+                        null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
+            } else {
+                Bundle bundle = new Bundle();
+                bundle.putInt(LIMIT_PARAM_KEY,1);
+                cursor = activity.getContentResolver()
+                        .query(contacts,null,
+                                bundle,
+                                null);
+            }
+
+
+
+
+            if (cursor.moveToFirst()) {
+
+                int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+                int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
+                int date = cursor.getColumnIndex(CallLog.Calls.DATE);
+                int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
+                Log.d("last_call", "int duration "+ duration);
+                Log.d("last_call", "int number "+ number);
+                Log.d("last_call", "int date "+ date);
+
+                String callType;
+                String phNumber = cursor.getString(number);
+                if(incomingtype == -1){
+                    callType = "incoming";
+                }
+                else {
+                    callType = "outgoing";
+                }
+                String callDate = cursor.getString(date);
+                String callDayTime = new Date(Long.valueOf(callDate)).toString();
+
+                String callDuration = cursor.getString(duration);
+
+
+             Call_Details.setCall_number(phNumber);
+             Call_Details.setDuration(callDuration);
+             Call_Details.setCall_time_stamp(callDayTime);
+            }
+            cursor.close();
+
+        } catch (SecurityException e) {
+            Log.e("Security Exception", "User denied call log permission");
+
         }
 
     }

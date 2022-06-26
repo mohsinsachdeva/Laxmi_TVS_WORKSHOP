@@ -47,6 +47,7 @@ public static TextView call_counter;
 Dialog  successDialog;
 public static final int REQUEST_CODE = 123;
 public static boolean sending_message = false;
+public static String last_dialled_number = "";
 
 
 
@@ -125,9 +126,7 @@ public static boolean sending_message = false;
         if(!BASIC_DATA_HOLDER.isMessage_mode()){
             if(sending_message && adapter_for_make_contact!=null){
                 adapter_for_make_contact.last_call_details();
-                try {
                     BASIC_DATA_HOLDER.progress_bar();
-                    Thread.sleep(3000);
                     DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
                     assert snapshot != null;
                     Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
@@ -149,14 +148,8 @@ public static boolean sending_message = false;
                     }else{
                         Log.d("testing", "onPostResume: Number NOT matched ");
                         BASIC_DATA_HOLDER.loading_dialog.dismiss();
-
                     }
-                } catch (InterruptedException e) {
-                    Log.d("testing", "onPostResume: Sleep error ");
-                    e.printStackTrace();
-                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
 
-                }
             }
         }else{
             if(sending_message && adapter_for_make_contact!=null){

@@ -432,8 +432,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                         cal.set(Calendar.YEAR,year);
                         cal.set(Calendar.MONTH,month);
                         cal.set(Calendar.DAY_OF_MONTH,dayOfMonth);
-                       
-                        if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+
+                        if(cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY){
                             String reminder_date = String.valueOf(cal.getTimeInMillis());
                             Customer_Class customer_class_for_reminder = customer_class;
                             customer_class_for_reminder.setRecycle_date(reminder_date);
@@ -455,6 +455,16 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 new DatePickerDialog(activity,android.R.style.Theme_Holo_Light_Dialog_MinWidth,dateSetListener,cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
             }
         });
+        if(BASIC_DATA_HOLDER.isMessage_mode()){
+            holder.cancel_button.setVisibility(View.INVISIBLE);
+            holder.call_button.setVisibility(View.INVISIBLE);
+            holder.service_history_button.setVisibility(View.INVISIBLE);
+        }else{
+            holder.cancel_button.setVisibility(View.VISIBLE);
+            holder.call_button.setVisibility(View.VISIBLE);
+            holder.service_history_button.setVisibility(View.VISIBLE);
+            holder.english_check_box.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

@@ -122,41 +122,50 @@ public static boolean sending_message = false;
 
             successDialog.show();
         }*/
-     if(sending_message && adapter_for_make_contact!=null){
-         adapter_for_make_contact.last_call_details();
-         try {
-             BASIC_DATA_HOLDER.progress_bar();
-             Thread.sleep(3000);
-             DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
-             assert snapshot != null;
-             Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
-             Log.d("testing", "onPostResume: "+ Call_Details.getDuration());
-             assert customer_class != null;
-             if(Long.parseLong( Call_Details.getCall_number()) == (customer_class.getMobile_1()) ||
-                     Long.parseLong( Call_Details.getCall_number()) == customer_class.getMobile_2()){
-                 Log.d("testing", "onPostResume: Number matched ");
-                 long duration = Long.parseLong(Call_Details.getDuration());
-                 if(duration > 4){
-                     Log.d("testing", "onPostResume: duration matched ");
-                     update_counter();
-                     BASIC_DATA_HOLDER.loading_dialog.dismiss();
-                 }else{
-                     Log.d("testing", "onPostResume: duration not matched ");
-                     BASIC_DATA_HOLDER.loading_dialog.dismiss();
+        if(!BASIC_DATA_HOLDER.isMessage_mode()){
+            if(sending_message && adapter_for_make_contact!=null){
+                adapter_for_make_contact.last_call_details();
+                try {
+                    BASIC_DATA_HOLDER.progress_bar();
+                    Thread.sleep(3000);
+                    DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                    assert snapshot != null;
+                    Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
+                    Log.d("testing", "onPostResume: "+ Call_Details.getDuration());
+                    assert customer_class != null;
+                    if(Long.parseLong( Call_Details.getCall_number()) == (customer_class.getMobile_1()) ||
+                            Long.parseLong( Call_Details.getCall_number()) == customer_class.getMobile_2()){
+                        Log.d("testing", "onPostResume: Number matched ");
+                        long duration = Long.parseLong(Call_Details.getDuration());
+                        if(duration > 4){
+                            Log.d("testing", "onPostResume: duration matched ");
+                            update_counter();
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        }else{
+                            Log.d("testing", "onPostResume: duration not matched ");
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
 
-                 }
-             }else{
-                 Log.d("testing", "onPostResume: Number NOT matched ");
-                 BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                        }
+                    }else{
+                        Log.d("testing", "onPostResume: Number NOT matched ");
+                        BASIC_DATA_HOLDER.loading_dialog.dismiss();
 
-             }
-         } catch (InterruptedException e) {
-             Log.d("testing", "onPostResume: Sleep error ");
-             e.printStackTrace();
-             BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                    }
+                } catch (InterruptedException e) {
+                    Log.d("testing", "onPostResume: Sleep error ");
+                    e.printStackTrace();
+                    BASIC_DATA_HOLDER.loading_dialog.dismiss();
 
-         }
-     }
+                }
+            }
+        }else{
+            if(sending_message && adapter_for_make_contact!=null){
+                String key =  Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0)).getKey();
+                remove_after_message_sent(key);
+            }
+
+        }
+
     }
 
     @Override
@@ -225,4 +234,15 @@ public static boolean sending_message = false;
         databaseReference.child("Counter").child(string_today).child(KEY_NAME_CALLS).setValue(String.valueOf(new_counter));
         sending_message = false;
      }
+    public void remove_after_message_sent(String key) {
+        Log.d("remove", "remove_after_message_sent: " + key);
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                Log.d("remove", "removed successfully ");
+                BASIC_DATA_HOLDER.loading_dialog.dismiss();
+                Make_Contact.sending_message = false;
+            }
+        });
+    }
 }

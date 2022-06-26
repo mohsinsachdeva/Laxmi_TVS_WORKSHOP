@@ -79,8 +79,18 @@ public class Home_page extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(message_mode.isChecked()){
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPrefhome",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+// Storing the key and its value as the data fetched from edittext
+                    myEdit.putBoolean("messagemode", true);
+                    myEdit.commit();
                     BASIC_DATA_HOLDER.setMessage_mode(true);
                 }else{
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPrefhome",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+// Storing the key and its value as the data fetched from edittext
+                    myEdit.putBoolean("messagemode", false);
+                    myEdit.commit();
                     BASIC_DATA_HOLDER.setMessage_mode(false);
                 }
             }
@@ -88,4 +98,10 @@ public class Home_page extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        SharedPreferences sh = getSharedPreferences("MySharedPrefhome", MODE_PRIVATE);
+        message_mode.setChecked(sh.getBoolean("messagemode",false));
+    }
 }

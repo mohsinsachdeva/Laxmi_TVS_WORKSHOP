@@ -37,17 +37,20 @@ import java.util.Objects;
 
 public class Make_Contact extends AppCompatActivity {
     public static final String KEY_NAME_CALLS = "calls";
+    public static final String LOGS_DATABASE_REFERENCE = "LOGS";
+    public static final int MINIMUM_CALL_DURATION = 4;
 ImageButton go_back_home;
 public static androidx.recyclerview.widget.RecyclerView customer_list;
 DatabaseReference databaseReference;
-public static RecyclerView.LayoutManager mLayoutManager;
+public static LinearLayoutManager mLayoutManager;
 Adapter_For_Make_Contact adapter_for_make_contact;
 public static TextView counter_text_box;
 public static TextView call_counter;
 Dialog  successDialog;
 public static final int REQUEST_CODE = 123;
 public static boolean sending_message = false;
-public static String last_dialled_number = "";
+
+
 
 
 
@@ -127,7 +130,9 @@ public static String last_dialled_number = "";
             if(sending_message && adapter_for_make_contact!=null){
                 adapter_for_make_contact.last_call_details();
                     BASIC_DATA_HOLDER.progress_bar();
-                    DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0));
+                    int postion = Adapter_For_Make_Contact.active_view_position;
+                Log.d("active_position", "onPostResume: " + postion);
+                    DataSnapshot snapshot = Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(postion));
                     assert snapshot != null;
                     Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
                     Log.d("testing", "onPostResume: "+ Call_Details.getDuration());
@@ -136,14 +141,67 @@ public static String last_dialled_number = "";
                             Long.parseLong( Call_Details.getCall_number()) == customer_class.getMobile_2()){
                         Log.d("testing", "onPostResume: Number matched ");
                         long duration = Long.parseLong(Call_Details.getDuration());
-                        if(duration > 4){
+                        if(duration > MINIMUM_CALL_DURATION){
                             Log.d("testing", "onPostResume: duration matched ");
+                                if(Adapter_For_Make_Contact.global_mobile1_selection){
+                                    Adapter_For_Make_Contact.last_dialled_number = String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_1()) ;
+                                }
+
+                                if(Adapter_For_Make_Contact.global_mobile2_selection){
+                                    Adapter_For_Make_Contact.last_dialled_number = String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_2()) ;
+                                }
                             update_counter();
+                                Calendar calendar = Calendar.getInstance();
+                                calendar.set(Calendar.HOUR,0);
+                                calendar.set(Calendar.MINUTE,0);
+                                calendar.set(Calendar.SECOND,0);
+                                calendar.set(Calendar.MILLISECOND,0);
+                                String frame = Adapter_For_Make_Contact.customer_class_gloabl.getFrame_no();
+                                String contact_date = String.valueOf(calendar.getTimeInMillis());
+                                String contact_number = "";
+                                String current_time = String.valueOf(Calendar.getInstance().getTimeInMillis()) ;
+                                if(Adapter_For_Make_Contact.global_mobile1_selection){
+                                 contact_number =  String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_1());
+                                }
+                            if(Adapter_For_Make_Contact.global_mobile2_selection){
+                                contact_number =  String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_2());
+                            }
+                                //String user, String frame_no, String message, String contact_date, String contact_type, String contact_number
+                            LOG_CLASS  log_class = new LOG_CLASS(BASIC_DATA_HOLDER.getUser(),frame,"",contact_date,"PHONE_CALL_CONNECT",contact_number );
+                            databaseReference.child(LOGS_DATABASE_REFERENCE).child(contact_number).child(String.valueOf(current_time)).setValue(log_class);
                             BASIC_DATA_HOLDER.loading_dialog.dismiss();
-                        }else{
-                            Log.d("testing", "onPostResume: duration not matched ");
+                        }else if(duration == 0){
+                            Log.d("testing", "onPostResume: duration matched ");
+                            if(Adapter_For_Make_Contact.global_mobile1_selection){
+                                Adapter_For_Make_Contact.last_dialled_number = String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_1()) ;
+                            }
+
+                            if(Adapter_For_Make_Contact.global_mobile2_selection){
+                                Adapter_For_Make_Contact.last_dialled_number = String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_2()) ;
+                            }
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.set(Calendar.HOUR,0);
+                            calendar.set(Calendar.MINUTE,0);
+                            calendar.set(Calendar.SECOND,0);
+                            calendar.set(Calendar.MILLISECOND,0);
+                            String frame = Adapter_For_Make_Contact.customer_class_gloabl.getFrame_no();
+                            String contact_date = String.valueOf(calendar.getTimeInMillis());
+                            String contact_number = "";
+                            String current_time = String.valueOf(Calendar.getInstance().getTimeInMillis()) ;
+                            if(Adapter_For_Make_Contact.global_mobile1_selection){
+                                contact_number =  String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_1());
+                            }
+                            if(Adapter_For_Make_Contact.global_mobile2_selection){
+                                contact_number =  String.valueOf(Adapter_For_Make_Contact.customer_class_gloabl.getMobile_2());
+                            }
+                            //String user, String frame_no, String message, String contact_date, String contact_type, String contact_number
+                            LOG_CLASS  log_class = new LOG_CLASS(BASIC_DATA_HOLDER.getUser(),frame,"",contact_date,"PHONE_CALL_NOT_CONNECT",contact_number );
+                            databaseReference.child(LOGS_DATABASE_REFERENCE).child(contact_number).child(String.valueOf(current_time)).setValue(log_class);
                             BASIC_DATA_HOLDER.loading_dialog.dismiss();
 
+                        }else{
+                            Log.d("testing", "durtation not matched ");
+                            BASIC_DATA_HOLDER.loading_dialog.dismiss();
                         }
                     }else{
                         Log.d("testing", "onPostResume: Number NOT matched ");
@@ -153,7 +211,9 @@ public static String last_dialled_number = "";
             }
         }else{
             if(sending_message && adapter_for_make_contact!=null){
-                String key =  Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(0)).getKey();
+                int postion = Adapter_For_Make_Contact.active_view_position;
+                Log.d("active_position", "onPostResume: " + postion);
+                String key =  Adapter_For_Make_Contact.hashMap.get(Adapter_For_Make_Contact.key_holder.get(postion)).getKey();
                 remove_after_message_sent(key);
             }
 

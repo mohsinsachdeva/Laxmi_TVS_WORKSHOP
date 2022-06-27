@@ -14,4 +14,10 @@
         <item>Due</item>
         <item>Over Due</item>
     </array>
+
+    <array name="user_names">
+        <item>No Selection</item>
+        <item>rupinder</item>
+        <item>nisha</item>
+    </array>
 </resources>

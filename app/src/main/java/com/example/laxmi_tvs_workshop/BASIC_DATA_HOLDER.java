@@ -10,6 +10,15 @@ public class BASIC_DATA_HOLDER {
     public static Dialog loading_dialog;
 
     public static boolean message_mode;
+    public static String user = "";
+
+    public static String getUser() {
+        return user;
+    }
+
+    public static void setUser(String user) {
+        BASIC_DATA_HOLDER.user = user;
+    }
 
     public static boolean isMessage_mode() {
         return message_mode;

@@ -15,8 +15,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 public class Home_page extends AppCompatActivity {
     public static final int REQUEST_CODE = 1234;
@@ -24,6 +28,9 @@ public class Home_page extends AppCompatActivity {
     Button paid_Calling;
     Button testing;
     Boolean permission_result;
+    Button reminder;
+    Spinner user_Spinner;
+    ArrayAdapter<CharSequence> user_names;
 
     androidx.appcompat.widget.SwitchCompat message_mode;
 
@@ -39,52 +46,81 @@ public class Home_page extends AppCompatActivity {
 
         free_Calling = (Button) findViewById(R.id.free_Calling);
         paid_Calling = (Button) findViewById(R.id.paid_Calling);
+        reminder = (Button)findViewById(R.id.reminder);
         testing = (Button)findViewById(R.id.testing);
         message_mode = ( androidx.appcompat.widget.SwitchCompat)findViewById(R.id.message_mode);
         free_Calling.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
-                SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                if(user_selected()){
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
 // Storing the key and its value as the data fetched from edittext
-                myEdit.putBoolean("sendingmessage", false);
-                myEdit.commit();
-                BASIC_DATA_HOLDER.setCalling_type("calling_free");
-                Intent intent = new Intent(Home_page.this, Make_Contact.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
+                    myEdit.putBoolean("sendingmessage", false);
+                    myEdit.commit();
+                    BASIC_DATA_HOLDER.setCalling_type("calling_free");
+                    Intent intent = new Intent(Home_page.this, Make_Contact.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+
             }
         });
         paid_Calling.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
-                SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                if(user_selected()){
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
 // Storing the key and its value as the data fetched from edittext
-                myEdit.putBoolean("sendingmessage", false);
-                myEdit.commit();
-                BASIC_DATA_HOLDER.setCalling_type("calling_paid");
-                Intent intent = new Intent(Home_page.this, Make_Contact.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
+                    myEdit.putBoolean("sendingmessage", false);
+                    myEdit.commit();
+                    BASIC_DATA_HOLDER.setCalling_type("calling_paid");
+                    Intent intent = new Intent(Home_page.this, Make_Contact.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+
+            }
+        });
+
+        reminder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(user_selected()){
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+// Storing the key and its value as the data fetched from edittext
+                    myEdit.putBoolean("sendingmessage", false);
+                    myEdit.commit();
+                    BASIC_DATA_HOLDER.setCalling_type("reminder");
+                    Intent intent = new Intent(Home_page.this, Make_Contact.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+
+
             }
         });
 
         testing.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
-                SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                if(user_selected()){
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
 // Storing the key and its value as the data fetched from edittext
-                myEdit.putBoolean("sendingmessage", false);
-                myEdit.commit();
-                BASIC_DATA_HOLDER.setCalling_type("testing");
-                Intent intent = new Intent(Home_page.this, Make_Contact.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
+                    myEdit.putBoolean("sendingmessage", false);
+                    myEdit.commit();
+                    BASIC_DATA_HOLDER.setCalling_type("testing");
+                    Intent intent = new Intent(Home_page.this, Make_Contact.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                }
             }
         });
         message_mode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -107,7 +143,22 @@ public class Home_page extends AppCompatActivity {
                 }
             }
         });
+        user_Spinner = (Spinner) findViewById(R.id.user_spinner);
+        user_names = ArrayAdapter.createFromResource(this,R.array.user_names, android.R.layout.simple_spinner_dropdown_item);
+        user_Spinner.setAdapter(user_names);
+        user_Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position>0){
+                    BASIC_DATA_HOLDER.setUser(user_Spinner.getSelectedItem().toString());
+                }
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
     }
 
     @Override
@@ -235,5 +286,14 @@ public class Home_page extends AppCompatActivity {
             return permission_result;
         }
 
+    }
+
+    public boolean user_selected (){
+        if(user_Spinner.getSelectedItemPosition()>0){
+            return true;
+        }else{
+            Toast.makeText(this, "Please Select User", Toast.LENGTH_SHORT).show();
+            return false;
+        }
     }
 }

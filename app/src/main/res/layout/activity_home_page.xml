@@ -7,6 +7,17 @@
     tools:context=".Home_page">
 
 
+    <Spinner
+        android:id="@+id/user_spinner"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.563"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.118" />
+
     <Button
         android:id="@+id/free_Calling"
         android:layout_width="200dp"
@@ -43,19 +54,31 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.619" />
 
+    <Button
+        android:id="@+id/reminder"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="reminder"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.597"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.731" />
+
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/message_mode"
         android:layout_width="200dp"
         android:layout_height="50dp"
         android:background="@color/firebase_yellow"
+        android:gravity="center"
         android:text="Message_Mode"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.639"
+        app:layout_constraintHorizontal_bias="0.597"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.765" />
+        app:layout_constraintVertical_bias="0.831" />
 </androidx.constraintlayout.widget.ConstraintLayout>

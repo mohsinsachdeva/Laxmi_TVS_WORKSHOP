@@ -12,11 +12,11 @@
         android:id="@+id/top_layout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:weightSum="3"
+        android:weightSum="5"
         android:background="@color/grey">
         <TextView
             android:id="@+id/call_counter"
-            android:layout_width="80dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@color/light"
             android:gravity="center"
@@ -25,25 +25,37 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/header_title"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:background="@color/grey"
             android:gravity="center"
             android:text="CUSTOMER LIST"
             android:textColor="@color/black"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_weight="3"/>
+            android:layout_weight="5"/>
 
         <TextView
             android:id="@+id/counter_text_box"
-            android:layout_width="80dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@color/light"
             android:gravity="center"
             android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold" />
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/filter"
+            android:id="@+id/filter_button"/>
+
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/remove_filter"
+            android:id="@+id/remove_filter_button"/>
 
     </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.example.laxmi_tvs_workshop;
 
+import static android.provider.CallLog.Calls.DEFAULT_SORT_ORDER;
 import static android.provider.CallLog.Calls.LIMIT_PARAM_KEY;
 
 import android.Manifest;
@@ -20,6 +21,7 @@ import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -60,6 +62,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 
 
 public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_Make_Contact.Holder> {
@@ -69,6 +72,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     DatabaseReference databaseReference;
     public static HashMap<String, DataSnapshot> hashMap;
     public static ArrayList<String> key_holder;
+    public static HashMap<String, DataSnapshot> searchviewMap;
+    public static ArrayList<String> search_view_key_holder_array;
     Calendar calendar;
     String last_message_date = "";
     String frame_no;
@@ -85,6 +90,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     public static String last_dialled_number = "";
     public static int active_view_position;
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    public static String filter_date = "";
+    public static String filter_value ="";
+
 
     public Adapter_For_Make_Contact(Activity activity, DatabaseReference databaseReference) {
         this.activity = activity;
@@ -92,6 +100,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         hashMap = new HashMap<>();
         calendar = Calendar.getInstance();
         key_holder = new ArrayList<>();
+        searchviewMap = new HashMap<>();
+        search_view_key_holder_array = new ArrayList<>();
         counter_check();
         BASIC_DATA_HOLDER.progress_bar();
 
@@ -99,12 +109,12 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
 
         Log.d("testing", "Adapter_For_Make_Contact: CALLED");
-        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type() +"_"+ BASIC_DATA_HOLDER.getUser()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     if(snapshot.getChildrenCount()>0){
-                        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).addChildEventListener(childEventListener);
+                        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()+"_"+ BASIC_DATA_HOLDER.getUser()).addChildEventListener(childEventListener);
                     }else{
                         BASIC_DATA_HOLDER.loading_dialog.dismiss();
                         Toast.makeText(activity, "NO DATA IS AVAILABLE", Toast.LENGTH_SHORT).show();
@@ -142,10 +152,23 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
     @Override
     public void onBindViewHolder(@NonNull Adapter_For_Make_Contact.Holder holder, int position) {
-        if(BASIC_DATA_HOLDER.getCalling_type().equals(KEY_NAME_REMINDER)){
-            DataSnapshot snapshot = hashMap.get(key_holder.get(position));
+        DataSnapshot snapshot;
+        if(filter_value.equals("")){
+            snapshot = hashMap.get(key_holder.get(position));
             Log.d("view_error", "onBindViewHolder: " + position);
             assert snapshot != null;
+        }else{
+            snapshot = searchviewMap.get(search_view_key_holder_array.get(position));
+            Log.d("view_error", "onBindViewHolder: " + position);
+            assert snapshot != null;
+        }
+        String key_value = snapshot.getKey();
+
+
+        if(BASIC_DATA_HOLDER.getCalling_type().equals(KEY_NAME_REMINDER)){
+            holder.mobile_selected.setChecked(Make_Contact.mobile_one_value);
+            holder.phone_selected.setChecked(Make_Contact.mobile_two_value);
+
             Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
             assert customer_class != null;
             holder.customer_name_value.setText(customer_class.getCustomer_name());
@@ -154,6 +177,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             holder.frame_number_value.setText(customer_class.getFrame_no());
             holder.address_line_one.setText(customer_class.address_line_2);
             holder.address_line_two.setText(customer_class.getAddress_line_3());
+            holder.registration_value.setText(customer_class.getRegistration());
             holder.service_type_value.setText(customer_class.getService_type());
             long recycle_date = Long.parseLong(customer_class.getRecycle_date());
 
@@ -161,6 +185,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             if (customer_class.getMobile_1() != null && !customer_class.getMobile_1().equals("")) {
                 holder.mobile_one_value.setText(String.valueOf(customer_class.mobile_1));
             }
+
             if (customer_class.getMobile_1() == 0) {
                 holder.mobile_one_value.setText("");
             }
@@ -317,23 +342,27 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
                 }
             });
-            holder.mobile_selected.setChecked(true);
-            holder.phone_selected.setChecked(false);
-
+            holder.mobile_selected.setChecked(Make_Contact.mobile_one_value);
+            holder.phone_selected.setChecked(Make_Contact.mobile_two_value);
             global_mobile1_selection = holder.mobile_selected.isChecked();
             global_mobile2_selection = holder.phone_selected.isChecked();
+
             holder.mobile_selected.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (holder.mobile_selected.isChecked()) {
                         holder.phone_selected.setChecked(false);
                         global_mobile1_selection = true;
+                        Make_Contact.mobile_one_value = true;
+
                     } else {
                         holder.phone_selected.setChecked(true);
                         global_mobile1_selection = false;
+                        Make_Contact.mobile_one_value = false;
                     }
                 }
             });
+
 
             holder.phone_selected.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -341,12 +370,18 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     if (holder.phone_selected.isChecked()) {
                         holder.mobile_selected.setChecked(false);
                         global_mobile2_selection = true;
+                        Make_Contact.mobile_one_value = true;
+                        Make_Contact.mobile_two_value = false;
                     } else {
                         holder.mobile_selected.setChecked(true);
                         global_mobile2_selection = false;
+                        Make_Contact.mobile_one_value = false;
+                        Make_Contact.mobile_two_value = true;
                     }
                 }
             });
+
+
             holder.call_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -354,6 +389,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     active_view_position = position;
                     if(getPermissions()){
                         // Create the intent.
+                        Log.e("calling", "permission granted");
                         callIntent = new Intent(Intent.ACTION_CALL);
                         // Set the data for the intent as the phone number.
 
@@ -382,6 +418,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                                 Log.e("calling", "Can't resolve app for ACTION_CALL Intent.");
                             }
                         }
+                    }else{
+                        Log.e("calling", "permission denied");
                     }
                 }
             });
@@ -462,7 +500,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                                 Customer_Class customer_class_for_reminder = customer_class;
                                 customer_class_for_reminder.setRecycle_date(reminder_date);
                                 customer_class_for_reminder.setService_type(BASIC_DATA_HOLDER.getCalling_type());
-                                databaseReference.child("reminder").child(customer_class.getFrame_no()).setValue(customer_class).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                databaseReference.child(KEY_NAME_REMINDER + "_" + BASIC_DATA_HOLDER.getUser()).child(customer_class.getFrame_no()).setValue(customer_class).addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
                                         Toast.makeText(activity, "Reminder Set Successfully", Toast.LENGTH_SHORT).show();
@@ -479,6 +517,11 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     new DatePickerDialog(activity,android.R.style.Theme_Holo_Light_Dialog_MinWidth,dateSetListener,cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
                 }
             });
+            if(global_mobile1_selection){
+                Make_Contact.last_attempt = holder.mobile_one_value.getText().toString();
+            }else{
+                Make_Contact.last_attempt = holder.mobile_two_value.getText().toString();
+            }
             if(BASIC_DATA_HOLDER.isMessage_mode()){
                 holder.cancel_button.setVisibility(View.INVISIBLE);
                 holder.call_button.setVisibility(View.INVISIBLE);
@@ -490,9 +533,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 holder.english_check_box.setVisibility(View.VISIBLE);
             }
         }else{
-            DataSnapshot snapshot = hashMap.get(key_holder.get(position));
-            Log.d("view_error", "onBindViewHolder: " + position);
-            assert snapshot != null;
+            holder.mobile_selected.setChecked(Make_Contact.mobile_one_value);
+            holder.phone_selected.setChecked(Make_Contact.mobile_two_value);
+
             Customer_Class customer_class = snapshot.getValue(Customer_Class.class);
             assert customer_class != null;
             holder.customer_name_value.setText(customer_class.getCustomer_name());
@@ -501,6 +544,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             holder.frame_number_value.setText(customer_class.getFrame_no());
             holder.address_line_one.setText(customer_class.address_line_2);
             holder.address_line_two.setText(customer_class.getAddress_line_3());
+            holder.registration_value.setText(customer_class.getRegistration());
             if (customer_class.getMobile_1() != null && !customer_class.getMobile_1().equals("")) {
                 holder.mobile_one_value.setText(String.valueOf(customer_class.mobile_1));
             }
@@ -660,8 +704,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
                 }
             });
-            holder.mobile_selected.setChecked(true);
-            holder.phone_selected.setChecked(false);
+
 
             global_mobile1_selection = holder.mobile_selected.isChecked();
             global_mobile2_selection = holder.phone_selected.isChecked();
@@ -671,9 +714,13 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                     if (holder.mobile_selected.isChecked()) {
                         holder.phone_selected.setChecked(false);
                         global_mobile1_selection = true;
+                        Make_Contact.mobile_one_value = true;
+                        Make_Contact.mobile_two_value = false;
                     } else {
                         holder.phone_selected.setChecked(true);
                         global_mobile1_selection = false;
+                        Make_Contact.mobile_one_value = false;
+                        Make_Contact.mobile_two_value = true;
                     }
                 }
             });
@@ -695,7 +742,6 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                 public void onClick(View v) {
                     customer_class_gloabl = customer_class;
                     active_view_position = position;
-                    if(getPermissions()){
                         // Create the intent.
                         callIntent = new Intent(Intent.ACTION_CALL);
                         // Set the data for the intent as the phone number.
@@ -704,10 +750,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             callIntent.setData(Uri.parse("tel:" + holder.mobile_one_value.getText().toString()));
                             // If package resolves to an app, send intent.
                             if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
-                                if (getPermissions()) {
                                     Make_Contact.sending_message = true;
                                     activity.startActivityForResult(callIntent,1234);
-                                }
+
                             } else {
 
                                 Log.e("calling", "Can't resolve app for ACTION_CALL Intent.");
@@ -716,16 +761,16 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             callIntent.setData(Uri.parse("tel:" + holder.mobile_two_value.getText().toString()));
                             // If package resolves to an app, send intent.
                             if (callIntent.resolveActivity(activity.getPackageManager()) != null) {
-                                if (getPermissions()) {
+
                                     Make_Contact.sending_message = true;
                                     activity.startActivity(callIntent);
-                                }
+
                             } else {
 
                                 Log.e("calling", "Can't resolve app for ACTION_CALL Intent.");
                             }
                         }
-                    }
+
                 }
             });
             holder.service_history_button.setOnClickListener(new View.OnClickListener() {
@@ -779,9 +824,12 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             holder.cancel_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    remove_after_message_sent(snapshot.getKey());
+                    Log.d("snapshot_key", "onBindViewHolder: " + key_value);
+                    remove_after_message_sent(key_value);
                 }
             });
+            holder.mobile_selected.setChecked(Make_Contact.mobile_one_value);
+            holder.phone_selected.setChecked(Make_Contact.mobile_two_value);
 
             holder.reminder.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -805,7 +853,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                                 Customer_Class customer_class_for_reminder = customer_class;
                                 customer_class_for_reminder.setRecycle_date(reminder_date);
                                 customer_class_for_reminder.setService_type(BASIC_DATA_HOLDER.getCalling_type());
-                                databaseReference.child("reminder").child(customer_class.getFrame_no()).setValue(customer_class).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                databaseReference.child(KEY_NAME_REMINDER+ "_" + BASIC_DATA_HOLDER.getUser()).child(customer_class.getFrame_no()).setValue(customer_class).addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
                                         Toast.makeText(activity, "Reminder Set Successfully", Toast.LENGTH_SHORT).show();
@@ -839,7 +887,11 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
     @Override
     public int getItemCount() {
-        return hashMap.size();
+        if(filter_value.equals("")){
+            return hashMap.size();
+        }else{
+          return  searchviewMap.size();
+        }
     }
 
     public class Holder extends RecyclerView.ViewHolder {
@@ -854,7 +906,9 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         TextView mobile_two_value;
         TextView service_type_value;
         TextView recycle_date_value;
+        TextView registration_value;
         ImageButton english_check_box;
+        ImageButton setappointment;
         ImageView call_button;
         CheckBox mobile_selected;
         CheckBox phone_selected;
@@ -884,6 +938,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             service_history_button = (ImageButton) itemView.findViewById(R.id.service_history_button);
             cancel_button = (ImageButton) itemView.findViewById(R.id.cancel);
             reminder = (ImageButton) itemView.findViewById(R.id.reminder);
+            registration_value = (TextView) itemView.findViewById(R.id.registration_value);
+            setappointment = (ImageButton) itemView.findViewById(R.id.setappointment);
         }
     }
 
@@ -911,6 +967,10 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
             String key = snapshot.getKey();
             hashMap.remove(String.valueOf(key));
             key_holder.remove(key);
+
+            searchviewMap.remove(String.valueOf(key));
+            search_view_key_holder_array.remove(key);
+
             notifyDataSetChanged();
         }
 
@@ -928,6 +988,8 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
     public void cleanup() {
         databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).removeEventListener(childEventListener);
         hashMap.clear();
+        searchviewMap.clear();
+        search_view_key_holder_array.clear();
     }
 
     public boolean service_status(String due_date_as_received) {
@@ -965,13 +1027,13 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         Log.d("counter", "Todays date at start: " + today);
 
         String string_today = String.valueOf(today);
-        databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).addValueEventListener(new ValueEventListener() {
+        databaseReference.child("Counter").child(string_today).child(BASIC_DATA_HOLDER.getUser()).child(KEY_NAME_MESSAGE).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     Make_Contact.counter_text_box.setText(snapshot.getValue(String.class));
                 } else {
-                    databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).setValue("0");
+                    databaseReference.child("Counter").child(string_today).child(BASIC_DATA_HOLDER.getUser()).child(KEY_NAME_MESSAGE).setValue("0");
                     Make_Contact.counter_text_box.setText("0");
                 }
             }
@@ -994,7 +1056,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
         String string_today = String.valueOf(today);
         int current = Integer.parseInt(Make_Contact.counter_text_box.getText().toString());
         int new_counter = current + 1;
-        databaseReference.child("Counter").child(string_today).child(KEY_NAME_MESSAGE).setValue(String.valueOf(new_counter));
+        databaseReference.child("Counter").child(string_today).child(BASIC_DATA_HOLDER.getUser()).child(KEY_NAME_MESSAGE).setValue(String.valueOf(new_counter));
     }
 
 
@@ -1160,7 +1222,7 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
     public void remove_after_message_sent(String key) {
         Log.d("remove", "remove_after_message_sent: " + key);
-        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()).child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+        databaseReference.child(BASIC_DATA_HOLDER.getCalling_type()+"_"+BASIC_DATA_HOLDER.getUser()).child(key).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
                 Log.d("remove", "removed successfully ");
@@ -1294,18 +1356,113 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
 
     public void last_call_details (){
 
-        if(last_dialled_number.equals(String.valueOf(customer_class_gloabl.getMobile_1())) ||
-                last_dialled_number.equals(String.valueOf(customer_class_gloabl.getMobile_2()))){
-                    Call_Details.setCall_number("0");
-                    Call_Details.setDuration("0");
-                    Call_Details.setCall_time_stamp("0");
-        }else{
-            Log.d("last_call_new", "last_call_details: "+ CallLog.Calls.getLastOutgoingCall(activity));
+
+        if(global_mobile1_selection && !last_dialled_number.equals(String.valueOf(customer_class_gloabl.getMobile_1()))){
+            Log.d("last_call", "last dialled number: " + last_dialled_number);
+            Log.d("last_call", "number sent for dail mobile 1" + customer_class_gloabl.getMobile_1());
             Call_Details callDetails = new Call_Details();
             Cursor cursor;
             int offset = 1;
+
             Uri contacts = CallLog.Calls.CONTENT_URI;
-            try{
+
+
+                //Cursor managedCursor = activity.getContentResolver().query(contacts, null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    Log.d("last_call", "version less than 30 ");
+                    cursor =  activity.getContentResolver().query(
+                            CallLog.Calls.CONTENT_URI.buildUpon().appendQueryParameter(LIMIT_PARAM_KEY, "1")
+                                    .build(),
+                            null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
+
+                    try{
+                        if (cursor.moveToFirst()) {
+                            int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+                            int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
+                            int date = cursor.getColumnIndex(CallLog.Calls.DATE);
+                            int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
+                            Log.d("last_call", "int duration " + duration);
+                            Log.d("last_call", "int number " + number);
+                            Log.d("last_call", "int date " + date);
+
+                            String callType;
+                            String phNumber = cursor.getString(number);
+                            if (incomingtype == -1) {
+                                callType = "incoming";
+                            } else {
+                                callType = "outgoing";
+                            }
+                            String callDate = cursor.getString(date);
+                            String callDayTime = new Date(Long.valueOf(callDate)).toString();
+
+                            String callDuration = cursor.getString(duration);
+
+
+                            Call_Details.setCall_number(phNumber);
+                            Call_Details.setDuration(callDuration);
+                            Call_Details.setCall_time_stamp(callDayTime);
+
+                            cursor.close();
+                        }
+                    } catch (SecurityException e) {
+                        Log.e("Security Exception", "User denied call log permission");
+
+                    }
+                } else {
+                    Log.d("last_call", "version greater than 30 ");
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(LIMIT_PARAM_KEY,1);
+                    cursor = activity
+                            .getContentResolver()
+                            .query(contacts,null,
+                                    bundle,
+                                    null);
+                    try{
+                        if (cursor.moveToLast()) {
+                            int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+                            int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
+                            int date = cursor.getColumnIndex(CallLog.Calls.DATE);
+                            int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
+                            Log.d("last_call", "int duration " + duration);
+                            Log.d("last_call", "int number " + number);
+                            Log.d("last_call", "int date " + date);
+
+                            String callType;
+                            String phNumber = cursor.getString(number);
+                            if (incomingtype == -1) {
+                                callType = "incoming";
+                            } else {
+                                callType = "outgoing";
+                            }
+                            String callDate = cursor.getString(date);
+                            String callDayTime = new Date(Long.valueOf(callDate)).toString();
+
+                            String callDuration = cursor.getString(duration);
+
+
+                            Call_Details.setCall_number(phNumber);
+                            Call_Details.setDuration(callDuration);
+                            Call_Details.setCall_time_stamp(callDayTime);
+
+                            cursor.close();
+                        }
+                    } catch (SecurityException e) {
+                        Log.e("Security Exception", "User denied call log permission");
+
+                    }
+                }
+
+
+        }else if(global_mobile2_selection && !last_dialled_number.equals(String.valueOf(customer_class_gloabl.getMobile_2()))){
+            Log.d("last_call", "last dialled number: " + last_dialled_number);
+            Log.d("last_call", "number sent for dail mobile 2" + customer_class_gloabl.getMobile_2());
+            Call_Details callDetails = new Call_Details();
+            Cursor cursor;
+            int offset = 1;
+
+            Uri contacts = CallLog.Calls.CONTENT_URI;
+
 
                 //Cursor managedCursor = activity.getContentResolver().query(contacts, null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
 
@@ -1315,6 +1472,40 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             CallLog.Calls.CONTENT_URI.buildUpon().appendQueryParameter(LIMIT_PARAM_KEY, "1")
                                     .build(),
                             null, null, null, android.provider.CallLog.Calls.DATE + " DESC limit 1;");
+
+                    try{
+                        if (cursor.moveToFirst()) {
+                            int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+                            int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
+                            int date = cursor.getColumnIndex(CallLog.Calls.DATE);
+                            int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
+                            Log.d("last_call", "int duration " + duration);
+                            Log.d("last_call", "int number " + number);
+                            Log.d("last_call", "int date " + date);
+
+                            String callType;
+                            String phNumber = cursor.getString(number);
+                            if (incomingtype == -1) {
+                                callType = "incoming";
+                            } else {
+                                callType = "outgoing";
+                            }
+                            String callDate = cursor.getString(date);
+                            String callDayTime = new Date(Long.valueOf(callDate)).toString();
+
+                            String callDuration = cursor.getString(duration);
+
+
+                            Call_Details.setCall_number(phNumber);
+                            Call_Details.setDuration(callDuration);
+                            Call_Details.setCall_time_stamp(callDayTime);
+
+                            cursor.close();
+                        }
+                    } catch (SecurityException e) {
+                        Log.e("Security Exception", "User denied call log permission");
+
+                    }
                 } else {
                     Bundle bundle = new Bundle();
                     bundle.putInt(LIMIT_PARAM_KEY,1);
@@ -1322,48 +1513,84 @@ public class Adapter_For_Make_Contact extends RecyclerView.Adapter<Adapter_For_M
                             .query(contacts,null,
                                     bundle,
                                     null);
-                }
+
+                    try{
+                        if (cursor.moveToLast()) {
+                            int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+                            int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
+                            int date = cursor.getColumnIndex(CallLog.Calls.DATE);
+                            int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
+                            Log.d("last_call", "int duration " + duration);
+                            Log.d("last_call", "int number " + number);
+                            Log.d("last_call", "int date " + date);
+
+                            String callType;
+                            String phNumber = cursor.getString(number);
+                            if (incomingtype == -1) {
+                                callType = "incoming";
+                            } else {
+                                callType = "outgoing";
+                            }
+                            String callDate = cursor.getString(date);
+                            String callDayTime = new Date(Long.valueOf(callDate)).toString();
+
+                            String callDuration = cursor.getString(duration);
 
 
+                            Call_Details.setCall_number(phNumber);
+                            Call_Details.setDuration(callDuration);
+                            Call_Details.setCall_time_stamp(callDayTime);
 
+                            cursor.close();
+                        }
+                    } catch (SecurityException e) {
+                        Log.e("Security Exception", "User denied call log permission");
 
-                if (cursor.moveToFirst()) {
-
-                    int number = cursor.getColumnIndex(CallLog.Calls.NUMBER);
-                    int duration = cursor.getColumnIndex(CallLog.Calls.DURATION);
-                    int date = cursor.getColumnIndex(CallLog.Calls.DATE);
-                    int incomingtype = cursor.getColumnIndex(String.valueOf(CallLog.Calls.INCOMING_TYPE));
-                    Log.d("last_call", "int duration " + duration);
-                    Log.d("last_call", "int number " + number);
-                    Log.d("last_call", "int date " + date);
-
-                    String callType;
-                    String phNumber = cursor.getString(number);
-                    if (incomingtype == -1) {
-                        callType = "incoming";
-                    } else {
-                        callType = "outgoing";
                     }
-                    String callDate = cursor.getString(date);
-                    String callDayTime = new Date(Long.valueOf(callDate)).toString();
-
-                    String callDuration = cursor.getString(duration);
-
-
-                    Call_Details.setCall_number(phNumber);
-                    Call_Details.setDuration(callDuration);
-                    Call_Details.setCall_time_stamp(callDayTime);
-
-                    cursor.close();
                 }
-            } catch (SecurityException e) {
-                Log.e("Security Exception", "User denied call log permission");
 
-            }
+
+
+
+
+        }else{
+            Log.d("last_call", "zero triggered + last dialled" + last_dialled_number);
+            Log.d("last_call", "zero triggered + mobile 1"+ customer_class_gloabl.getMobile_1());
+            Log.d("last_call", "zero triggered + mobile 2"+ customer_class_gloabl.getMobile_2());
+            Call_Details.setCall_number("0");
+            Call_Details.setDuration("0");
+            Call_Details.setCall_time_stamp("0");
         }
 
 
+    }
 
+    public void search(String newtext) {
+        BASIC_DATA_HOLDER.progress_bar();
+        searchviewMap = new HashMap<>();
+        search_view_key_holder_array = new ArrayList<>();
+        if (!newtext.equals("") || !newtext.equals(null)) {
+            this.filter_value = newtext;
+            for (int i = 0; i < hashMap.size(); i++) {
+                DataSnapshot snapshot = hashMap.get(String.valueOf(i));
+                if(snapshot!=null){
+                    Log.d("filter_position", "search: position " + i );
+                    if(Objects.equals(snapshot.child("due_date").getValue(String.class), newtext)){
+                        searchviewMap.put(key_holder.get(i), hashMap.get(key_holder.get(i)));
+                        search_view_key_holder_array.add(key_holder.get(i));
+                    }
+                }
+
+            }
+            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+            notifyDataSetChanged();
+
+        } else {
+            searchviewMap.clear();
+            search_view_key_holder_array.clear();
+            BASIC_DATA_HOLDER.loading_dialog.dismiss();
+            notifyDataSetChanged();
+        }
     }
 }
 

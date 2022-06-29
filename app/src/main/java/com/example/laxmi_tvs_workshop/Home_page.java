@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -27,10 +28,12 @@ public class Home_page extends AppCompatActivity {
     Button free_Calling;
     Button paid_Calling;
     Button testing;
-    Boolean permission_result;
+    Boolean permission_result = false;
     Button reminder;
     Spinner user_Spinner;
+    ImageButton filter_button;
     ArrayAdapter<CharSequence> user_names;
+
 
     androidx.appcompat.widget.SwitchCompat message_mode;
 
@@ -151,6 +154,11 @@ public class Home_page extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if(position>0){
                     BASIC_DATA_HOLDER.setUser(user_Spinner.getSelectedItem().toString());
+                    SharedPreferences sharedPreferences = getSharedPreferences("userpref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+// Storing the key and its value as the data fetched from edittext
+                    myEdit.putInt("active_user", position);
+                    myEdit.commit();
                 }
             }
 
@@ -159,12 +167,15 @@ public class Home_page extends AppCompatActivity {
 
             }
         });
+
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
         SharedPreferences sh = getSharedPreferences("MySharedPrefhome", MODE_PRIVATE);
+        SharedPreferences sh1 = getSharedPreferences("userpref", MODE_PRIVATE);
+        user_Spinner.setSelection(sh1.getInt("active_user",0));
         message_mode.setChecked(sh.getBoolean("messagemode",false));
     }
 
@@ -265,7 +276,7 @@ public class Home_page extends AppCompatActivity {
                     alertDialog.show();
                 } else {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE
-                            , Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS}, REQUEST_CODE);
+                            , Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS,  Manifest.permission.READ_CALL_LOG}, REQUEST_CODE);
 
                 }
                 ActivityCompat.OnRequestPermissionsResultCallback mr = new ActivityCompat.OnRequestPermissionsResultCallback() {

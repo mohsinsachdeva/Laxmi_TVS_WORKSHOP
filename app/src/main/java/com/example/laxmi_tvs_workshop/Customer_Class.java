@@ -14,6 +14,16 @@ public class Customer_Class {
     Long mobile_2;
     String recycle_date;
     String service_type;
+    String registration;
+    String appointment_date_time;
+
+    public String getAppointment_date_time() {
+        return appointment_date_time;
+    }
+
+    public void setAppointment_date_time(String appointment_date_time) {
+        this.appointment_date_time = appointment_date_time;
+    }
 
     public String getCustomer_name() {
         return customer_name;
@@ -80,7 +90,7 @@ public class Customer_Class {
     }
 
     public Customer_Class(String customer_name, String model, String due_date, String frame_no,
-                          String address_line_2, String address_line_3, Long mobile_1, Long mobile_2){
+                          String address_line_2, String address_line_3, Long mobile_1, Long mobile_2, String registration){
         this.customer_name = customer_name;
         this.model = model;
         this.due_date = due_date;
@@ -89,6 +99,7 @@ public class Customer_Class {
         this.address_line_3 = address_line_3;
         this.mobile_1 = mobile_1;
         this.mobile_2 = mobile_2;
+        this.registration = registration;
     }
 
     public String getRecycle_date() {
@@ -107,8 +118,16 @@ public class Customer_Class {
         this.service_type = service_type;
     }
 
+    public String getRegistration() {
+        return registration;
+    }
+
+    public void setRegistration(String registration) {
+        this.registration = registration;
+    }
+
     public Customer_Class(String customer_name, String model, String due_date, String frame_no,
-                          String address_line_2, String address_line_3, Long mobile_1, Long mobile_2, String recycle_date, String service_type){
+                          String address_line_2, String address_line_3, Long mobile_1, Long mobile_2, String recycle_date, String service_type, String registration){
         this.customer_name = customer_name;
         this.model = model;
         this.due_date = due_date;
@@ -119,6 +138,7 @@ public class Customer_Class {
         this.mobile_2 = mobile_2;
         this.recycle_date = recycle_date;
         this.service_type = service_type;
+        this.registration = registration;
     }
 
 
